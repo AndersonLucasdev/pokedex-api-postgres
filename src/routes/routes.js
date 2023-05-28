@@ -1,10 +1,10 @@
 import { Router } from "express"
-import { mostrarPokemonControllers } from "../controllers/controllersInfo.js"
+import { MostrarTodosControllers } from "../controllers/controllersInfo.js"
 
 const route = Router()
 
 
-route.get("/mostrar", mostrarPokemonControllers)
+route.get("/mostrar", MostrarTodosControllers)
 
 
 export default route
