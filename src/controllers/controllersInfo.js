@@ -1,7 +1,4 @@
-const pool = require("../database/db")
-
-
-
+import pool from "../database/db.js"
 
 const mostrarPokemonControllers = async (req, res) => {
     try {
@@ -33,6 +30,6 @@ const CadastrarPokemonControllers = async (req, res) => {
 
 }
 
-module.exports = {
+export {
     mostrarPokemonControllers, CadastrarPokemonControllers
 }
