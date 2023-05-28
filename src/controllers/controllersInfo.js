@@ -23,6 +23,7 @@ const CadastrarPokemonControllers = async (req, res) => {
             res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400})
         } else {
             try {
+                console.log("oi")
                 // if (nome === pool.query("select nome from pokemon_info" || )) aqui vai verificar o nome
             }
             catch (erro) {
