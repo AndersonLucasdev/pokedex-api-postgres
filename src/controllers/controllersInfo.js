@@ -28,7 +28,6 @@ const MostrarPeloID = async (req, res) => {
 
 }
 
-
 const CadastrarPokemonControllers = async (req, res) => {
 
         const { 
