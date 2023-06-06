@@ -31,22 +31,28 @@ const MostrarPeloID = async (req, res) => {
 const CadastrarPokemonControllers = async (req, res) => {
 
         const { 
-            nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade
+            nome, descricao, altura, peso, categoria, genero, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade
         } = req.body
 
         if (!nome || !descricao || !altura || !peso || !categoria_id || !genero_id || !total || !hp || !ataque || !defesa || !especial_ataque || !especial_defesa || !velocidade) {
              res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400})
         } else {
             try {
-                // if (nome === pool.query("select nome from pokemon_info" || )) aqui vai verificar o nome
-                const CadastroPokemon = pool.query("INSERT INTO pokemon_info Values($1, $2, $3, $4, $5, $6, $7, $8, $9 $10 $11 $12 $13)," [nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, velocidade])
-                const verificaTipo = pool.query("Select tipo from pokemon_tipagem")
-                console.log(verificaTipo)
-                // ${req.body.pokemon_info_id},'${req.body.nome}','${req.body.descricao}',${req.body.altura},${req.body.peso},${req.body.categoria_id}, ${req.body.genero_id},${req.body.total},${req.body.hp},${req.body.ataque},${req.body.defesa},${req.body.especial_ataque},${req.body.especial_defesa},${req.body.velocidade}
-    
-                // if (!CadastroPokemon) {
-                //     res.status(200).json({Mensagem: "Erro no cadastro do pokemon.", status:400})
-                // }
+                const verificaCategoria = pool.query("Select categorias from categoria")
+                if (verificaCategoria === categoria) {
+                    return res.status(200).json({Mensagem: "Categoria já cadastrada."})
+                } else {
+                    const insereCategoria = pool.query("Insert into categorias Values($1)," [categoria_id])
+                } if (verificaTipo === tipo) {
+                    return res.status(200).json({Mensagem: "Tipo já cadastrada."})
+                } else {
+                    const insereGenero = pool.query("Insert into generos Values($1)," [genero_id])
+                }  
+
+                const CadastroPokemon = pool.query("INSERT INTO pokemon_info Values($1, $2, $3, $4, $5, $6, $7, $8, $9 $10 $11)," [nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, velocidade])
+                if (!verificaTipo) {
+
+                }
                 res.status(200).json(
                     {
                         user: {
