@@ -58,7 +58,7 @@ const Login = async (req, res) => {
         }
 
         const verificaUsuario = pool.query("Select /campo from /tabela")
-        if (!verificado) {
+        if (!verificaUsuario) {
             res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
         }
 
@@ -75,4 +75,87 @@ const Login = async (req, res) => {
     catch {
         res.status(500).json({Mensagem: erro.Mensagem})
     }
+}
+
+//
+const validarToken = async (req,res) =>{
+
+    const token =  req.body.token || req.query.token || req.cookies.token || req.headers['x-access-token'];
+    req.token = token
+
+    if(!token){
+        return res.status(200).json({Message:"Token inválido.", status:400})
+    }
+
+    jwt.verify(token, process.env.SECRET_JWT, (err, decoded) =>{
+        if(err){
+            console.log("oi")
+            return res.status(200).json({Message:"Token inválido.", status:400})
+        }else{
+            req.usuario = decoded.usuario
+            return res.status(200).json({Message:"Token válido."})
+        }
+    })
+}
+
+const deletarToken = async (req, res) =>{
+
+    const token = req.body.token || req.query.token || req.cookies.token || req.headers['x-access-token'];
+
+    if(!token){
+       return res.status(200).json({Message:"Logout não autorizado.", status:400})
+    }
+
+    res.cookie('token', null, {httpOnly:true})
+    
+    return res.status(200).json({Message:"Você foi desconectado."})
+
+}
+
+const EncontrarUsuarios = async (req, res) => {
+    try {
+        //const usuario = await pool.query("Select //nome_usuario from usuarios")
+
+        if (usuario.length === 0) {
+            return res.status(200).json({Message: 'Não há usuarios cadastrados.'})
+        }   else {
+            res.status(200).json(usuario)
+        }
+    }  catch (error) {
+        res.status(500).json({Message: error.Message})
+    }
+} 
+
+const EncontrarUsuario = async (req, res) => {
+    try {
+        const usuario = req.usuario
+
+        res.status(200).json(usuario)
+    }
+
+    catch (erro){
+        return res.status(500).json({Message: erro.Message})
+    }
+}
+
+const removeUsuarioID = async (req, res) => {
+    try {
+
+        const {id} = req
+        if (!id) {
+            return res.status(200).json({Message: 'Id não informado.', status:400})
+        }
+
+        //const deletado = await pool.query(`${id}`)
+
+        return res.status(200).json({Message: "Usuário excluido com sucesso.", deletado})
+    }
+
+    catch (erro){
+        res.status(500).json({Message: erro.Message})
+    }
+}
+
+export {
+    CadastrarUsuarioControllers, Login, EncontrarUsuario, EncontrarUsuarios, removeUsuarioID, validarToken, deletarToken
 }
