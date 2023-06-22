@@ -1,11 +1,12 @@
 import { Router } from "express"
-import { MostrarTodosControllers, CadastrarPokemonControllers } from "../controllers/controllersInfo.js"
+import { MostrarTodosControllers, CadastrarPokemonControllers, MostrarPeloID } from "../controllers/controllersInfo.js"
 
 const route = Router()
 
 
-route.get("/mostrar", MostrarTodosControllers)
-route.post("/cadastro", CadastrarPokemonControllers)
+route.post("/mostrar", MostrarTodosControllers)
+route.post("/cadastrar", CadastrarPokemonControllers)
+route.get("/mostrar/:id", MostrarPeloID)
 
 
 export default route

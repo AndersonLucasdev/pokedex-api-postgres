@@ -10,7 +10,7 @@ import Route from "./src/routes/routes.js"
 
 
 const app = express()
-const port = 3000
+const port = 8080
 
 
 // app.use(bodyParser.json() );       // to support JSON-encoded bodies
@@ -23,4 +23,6 @@ app.use(express.json())
 app.use("/", Route)
 
 
-app.listen(port, console.log("Conectado"))
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`)
+})
