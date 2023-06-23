@@ -3,10 +3,12 @@ import pool from "../database/db.js"
 
 // funções get
 const MostrarTodosPokemonsControllers = async (req, res) => {
-    try {
-        const Pokemons = await pool.query("SELECT * FROM pokemon_info")
+   try {
+        const Pokemons = await pool.query(`SELECT pokemon_info_id, nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade, imagem, numero_pokemon
+        FROM public.pokemon_info order by numero_pokemon;
+      
+      `)
         
-
         if (Pokemons.length === 0) {
             res.status(200).json({Mensagem: "Não há pokemons cadastrados."})
         }
@@ -82,6 +84,24 @@ const MostrarTodasHabilidades = async (req, res) => {
 }
 }
 
+const MostrarTodosTipagem = async (req, res) => {
+  try {
+    const tipagem = await pool.query("SELECT * FROM tipagem")
+    
+  
+    if (tipagem.length === 0) {
+        res.status(200).json({Mensagem: "Não há tipos cadastrados."})
+    
+  
+    res.status(200).json(tipagem.rows)
+
+  }
+
+}catch (erro) {
+  res.status(500).json({Mensagem: erro.Mensagem})
+}
+}
+
 const MostrarPokemonPeloID = async (req, res) => {
     try {
         const pokemon = await pool.query(`SELECT pokemon_info_id, nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade
@@ -98,6 +118,12 @@ const MostrarPokemonPeloID = async (req, res) => {
 
 
 // função de cadastrar pokemon
+
+const CadastrarCategoria = async (req, res) => {
+
+}
+
+
 
 const CadastrarPokemonControllers = async (req, res) => {
     const {
@@ -345,5 +371,7 @@ const MostrarTodosAleatorioControllers = async (req, res) => {
     
 
 export {
-    MostrarTodosPokemonsControllers,CadastrarPokemonControllers,MostrarPokemonPeloID, ExcluirPokemonControllers, MostrarTodosAleatorioControllers
+    MostrarTodosPokemonsControllers, MostrarTodasCategorias, MostrarTodasFraquezas,
+    MostrarTodosGeneros, MostrarTodosTipagem, MostrarPokemonPeloID, MostrarTodasHabilidades,
+    CadastrarPokemonControllers, ExcluirPokemonControllers, MostrarTodosAleatorioControllers
 }
