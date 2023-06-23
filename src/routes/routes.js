@@ -1,7 +1,8 @@
 import { Router } from "express"
 import {MostrarTodosPokemonsControllers, MostrarTodasCategorias, MostrarTodasFraquezas,
-    MostrarTodosGeneros, MostrarTodosTipagem, MostrarPokemonPeloID, MostrarTodasHabilidades,
-    CadastrarPokemonControllers, ExcluirPokemonControllers, MostrarTodosAleatorioControllers} from "../controllers/controllersInfo.js"
+    MostrarTodosGeneros, MostrarTodosTipagem, MostrarTodasHabilidades, MostrarPokemonPeloID,
+    CadastrarPokemonControllers, CadastrarCategoria, CadastrarFraqueza, CadastrarTipagem,
+    CadastrarHabilidade, ExcluirPokemonControllers, MostrarTodosAleatorioControllers} from "../controllers/controllersInfo.js"
 
 const route = Router()
 
@@ -14,7 +15,16 @@ route.post("/mostrar/tipagem", MostrarTodosTipagem)
 route.post("/mostrar/habilidades", MostrarTodasHabilidades)
 
 
-route.post("/cadastrar", CadastrarPokemonControllers)
+// rotas cadastrar
+
+route.post("/cadastrar/pokemon", CadastrarPokemonControllers)
+route.post("/cadastrar/categoria", CadastrarCategoria)
+route.post("/cadastrar/fraquezas", CadastrarFraqueza)
+route.post("/cadastrar/tipagem", CadastrarTipagem)
+route.post("/cadastrar/habilidades", CadastrarHabilidade)
+
+
+
 route.get("/mostrar/:id", MostrarPokemonPeloID)
 
 

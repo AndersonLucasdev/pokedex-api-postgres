@@ -1,7 +1,7 @@
 import pool from "../database/db.js"
 
 
-// funções get
+// funções mostrar
 const MostrarTodosPokemonsControllers = async (req, res) => {
    try {
         const Pokemons = await pool.query(`SELECT pokemon_info_id, nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade, imagem, numero_pokemon
@@ -107,7 +107,6 @@ const MostrarPokemonPeloID = async (req, res) => {
         const pokemon = await pool.query(`SELECT pokemon_info_id, nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade
         FROM public.pokemon_info
         WHERE pokemon_info_id = ${req.params.id}`)
-        console.log(pokemon.rows[0])
         res.status(200).json(pokemon.rows[0])
     }
 
@@ -118,11 +117,140 @@ const MostrarPokemonPeloID = async (req, res) => {
 
 
 // função de cadastrar pokemon
-
 const CadastrarCategoria = async (req, res) => {
+  const {
+    categoria
+  } = req.body
 
+
+  try {
+    if (!categoria) {
+      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    }
+
+    const nova_categoria = primeiraLetraMaiuscula(categoria)
+
+    let categoria_id;
+    const verificaCategoria = await pool.query(
+      'SELECT categoria_id FROM categorias WHERE categoria = $1',
+      [nova_categoria]
+    );
+
+    if (verificaCategoria.rows.length > 0) {
+      categoria_id = verificaCategoria.rows[0].categoria_id;
+    } else {
+      const cadastroCategoria = await pool.query(
+        'INSERT INTO categorias (categoria) VALUES ($1) RETURNING categoria_id',
+        [nova_categoria]
+      );
+      categoria_id = cadastroCategoria.rows[0].categoria_id;
+    }
+    res.status(200).json({Mensagem: 'Categoria cadastrado com sucesso.' });
+  } catch (erro){
+    res.status(500).json({ Mensagem: 'Erro ao cadastrar categoria.', erro });
+  }
 }
 
+const CadastrarFraqueza = async (req, res) => {
+  const {
+    fraqueza
+  } = req.body
+
+  try {
+    if (!fraqueza) {
+      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    }
+
+    const nova_fraqueza = primeiraLetraMaiuscula(fraqueza)
+
+    let fraquezas_id;
+      const verificaFraqueza = await pool.query(
+        'SELECT fraquezas_id FROM fraquezas WHERE fraqueza = $1',
+        [nova_fraqueza]
+      );
+  
+      if (verificaFraqueza.rows.length > 0) {
+        fraquezas_id = verificaFraqueza.rows[0].fraquezas_id;
+      } else {
+        const cadastroFraqueza = await pool.query(
+          'INSERT INTO fraquezas (fraqueza) VALUES ($1) RETURNING fraquezas_id',
+          [nova_fraqueza]
+        );
+        fraquezas_id = cadastroFraqueza.rows[0].fraquezas_id;
+    }
+
+    res.status(200).json({Mensagem: 'Fraqueza cadastrado com sucesso.' });
+  } catch (erro){
+    res.status(500).json({ Mensagem: 'Erro ao cadastrar fraqueza.', erro });
+  }
+}
+
+const CadastrarHabilidade = async (req, res) => {
+  const {
+    habilidade
+  } = req.body
+
+  try {
+    if (!habilidade) {
+      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    }
+
+    const nova_habilidade = primeiraLetraMaiuscula(habilidade)
+    let habilidade_id;
+    const verificaHabilidade = await pool.query(
+      'SELECT habilidade_id FROM habilidades WHERE habilidade = $1',
+      [nova_habilidade]
+    );
+
+    if (verificaHabilidade.rows.length > 0) {
+      habilidade_id = verificaHabilidade.rows[0].habilidade_id;
+    } else {
+      const cadastroHabilidade = await pool.query(
+        'INSERT INTO habilidades (habilidade) VALUES ($1) RETURNING habilidade_id',
+        [nova_habilidade]
+      );
+      habilidade_id = cadastroHabilidade.rows[0].habilidade_id;
+    }
+
+    res.status(200).json({Mensagem: 'Habilidade cadastrado com sucesso.' });
+  } catch (erro){
+    res.status(500).json({ Mensagem: 'Erro ao cadastrar habilidade.', erro });
+  }
+}
+
+const CadastrarTipagem = async (req, res) => {
+  const {
+    tipagem
+  } = req.body
+
+  try {
+    if (!tipagem) {
+      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    }
+
+    const nova_tipagem = primeiraLetraMaiuscula(tipagem)
+
+    let tipagem_id;
+    const verificaTipagem = await pool.query(
+      'SELECT tipagem_id FROM tipagem WHERE tipo = $1',
+      [nova_tipagem]
+    );
+
+    if (verificaTipagem.rows.length > 0) {
+      tipagem_id = verificaTipagem.rows[0].tipagem_id;
+    } else {
+      const cadastroTipagem = await pool.query(
+        'INSERT INTO tipagem (tipo) VALUES ($1) RETURNING tipagem_id',
+        [nova_tipagem]
+      );
+      tipagem_id = cadastroTipagem.rows[0].tipagem_id;
+    }
+
+    res.status(200).json({Mensagem: 'Tipo cadastrado com sucesso.' });
+  } catch (erro){
+    res.status(500).json({ Mensagem: 'Erro ao cadastrar tipo.', erro });
+  }
+}
 
 
 const CadastrarPokemonControllers = async (req, res) => {
@@ -368,10 +496,23 @@ const MostrarTodosAleatorioControllers = async (req, res) => {
 }
 }
     
-    
+
+
+function primeiraLetraMaiuscula(texto) {
+  return texto
+    .trim() // Remove espaços em branco no início e no final da string
+    .replace(/\s+/g, ' ') // Remove espaços extras entre as palavras
+    .toLowerCase() // Converte todo o texto para minúsculas
+    .replace(/(^|\s)\S/g, (match) => match.toUpperCase()); // Converte as primeiras letras de cada palavra para maiúsculo
+
+}
+
+
+
 
 export {
     MostrarTodosPokemonsControllers, MostrarTodasCategorias, MostrarTodasFraquezas,
-    MostrarTodosGeneros, MostrarTodosTipagem, MostrarPokemonPeloID, MostrarTodasHabilidades,
-    CadastrarPokemonControllers, ExcluirPokemonControllers, MostrarTodosAleatorioControllers
+    MostrarTodosGeneros, MostrarTodosTipagem, MostrarTodasHabilidades, MostrarPokemonPeloID,
+    CadastrarPokemonControllers, CadastrarCategoria, CadastrarFraqueza, CadastrarTipagem, CadastrarHabilidade,
+    ExcluirPokemonControllers, MostrarTodosAleatorioControllers
 }
