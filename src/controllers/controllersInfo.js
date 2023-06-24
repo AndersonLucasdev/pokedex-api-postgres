@@ -115,6 +115,46 @@ const MostrarPokemonPeloID = async (req, res) => {
     }
 }
 
+const MostrarTodosPokemonsFraquezas = async (req, res) => {
+  const {
+    fraqueza
+  } = req.body
+
+  const Novafraqueza = primeiraLetraMaiuscula(fraqueza);
+
+  try {
+    if (!fraqueza) {
+      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    }
+
+    const nova_fraqueza = primeiraLetraMaiuscula(fraqueza)
+
+    await pool.query("SELECT pi.pokemon_info_id, nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade, imagem, numero_pokemon FROM pokemon_info pi inner join pokemon_fraquezas pf on pf.pokemon_info_id = pi.pokemon_info_id inner join fraquezas t on t.fraquezas_id = pf.fraquezas_id where fraqueza = 'Fogo' order by numero_pokemon")
+
+  } catch (erro) {
+    res.status(500).json({Mensagem: erro.Mensagem})
+  }
+}
+
+const MostrarTodosPokemonsTipagem = async (req, res) => {
+  const {
+    tipagem
+  } = req.body
+
+  try {
+    if (!tipagem) {
+      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    }
+
+    const NovaTipagem = primeiraLetraMaiuscula(tipagem);
+
+    await pool.query("SELECT pi.pokemon_info_id, nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade, imagem, numero_pokemon FROM pokemon_info pi inner join pokemon_tipagem pt on pt.pokemon_info_id = pi.pokemon_info_id inner join tipagem t on t.tipagem_id = pt.tipagem_id where tipo = 'Fogo' order by numero_pokemon")
+
+  } catch (erro) {
+    res.status(500).json({Mensagem: erro.Mensagem})
+  }
+}
+
 
 // função de cadastrar pokemon
 const CadastrarCategoria = async (req, res) => {
@@ -338,10 +378,13 @@ const CadastrarPokemonControllers = async (req, res) => {
   
       // Verifica fraqueza
       let fraquezas_id;
-      const verificaFraqueza = await pool.query(
-        'SELECT fraquezas_id FROM fraquezas WHERE fraqueza = $1',
-        [fraquezaFormatada]
-      );
+      const list_fraqueza_id = []
+      fraqueza.map(async(fraqueza_nome) => {
+        const verificaFraqueza = await pool.query(
+          'SELECT fraquezas_id FROM fraquezas WHERE fraqueza = $1',
+          [fraquezaFormatada]
+        );
+      })
   
       if (verificaFraqueza.rows.length > 0) {
         fraquezas_id = verificaFraqueza.rows[0].fraquezas_id;
@@ -351,14 +394,18 @@ const CadastrarPokemonControllers = async (req, res) => {
           [fraquezaFormatada]
         );
         fraquezas_id = cadastroFraqueza.rows[0].fraquezas_id;
+        list_fraqueza_id.push(fraquezas_id)
       }
-  
+
       // Verifica habilidade
       let habilidade_id;
-      const verificaHabilidade = await pool.query(
-        'SELECT habilidade_id FROM habilidades WHERE habilidade = $1',
-        [habilidadeFormatada]
-      );
+      const list_habilidade_id = []
+      habilidade.map(async(habilidade_nome) => {
+        const verificaHabilidade = await pool.query(
+          'SELECT habilidade_id FROM habilidades WHERE habilidade = $1',
+          [habilidadeFormatada]
+        );
+      })
   
       if (verificaHabilidade.rows.length > 0) {
         habilidade_id = verificaHabilidade.rows[0].habilidade_id;
@@ -368,23 +415,7 @@ const CadastrarPokemonControllers = async (req, res) => {
           [habilidadeFormatada]
         );
         habilidade_id = cadastroHabilidade.rows[0].habilidade_id;
-      }
-  
-      // Verifica tipagem
-      let tipagem_id;
-      const verificaTipagem = await pool.query(
-        'SELECT tipagem_id FROM tipagem WHERE tipo = $1',
-        [tipagemFormatada]
-      );
-  
-      if (verificaTipagem.rows.length > 0) {
-        tipagem_id = verificaTipagem.rows[0].tipagem_id;
-      } else {
-        const cadastroTipagem = await pool.query(
-          'INSERT INTO tipagem (tipo) VALUES ($1) RETURNING tipagem_id',
-          [tipagemFormatada]
-        );
-        tipagem_id = cadastroTipagem.rows[0].tipagem_id;
+        list_habilidade_id.push(habilidade_id)
       }
   
       // Verifica genero
@@ -400,6 +431,28 @@ const CadastrarPokemonControllers = async (req, res) => {
         return res.status(400).json({ Mensagem: 'Gênero inválido.', status: 400 });
       }
   
+      // Verifica tipagem
+      let tipagem_id;
+      const list_tipagem_id = []
+      tipagem.map( async (tipagem_nome) => {
+        console.log(tipagem_nome)
+        const verificaTipagem = await pool.query(
+          'SELECT tipagem_id FROM tipagem WHERE tipo = $1',
+          [tipagem_nome]
+        );
+    
+        if (verificaTipagem.rows.length > 0) {
+          tipagem_id = verificaTipagem.rows[0].tipagem_id;
+        } else {
+          const cadastroTipagem = await pool.query(
+            'INSERT INTO tipagem (tipo) VALUES ($1) RETURNING tipagem_id',
+            [tipagem_nome]
+          );
+          tipagem_id = cadastroTipagem.rows[0].tipagem_id;
+          list_tipagem_id.push(tipagem_id)
+        }
+      })
+
       // Inserindo nas tabelas
       const CadastroPokemon = await pool.query(
         `INSERT INTO pokemon_info (
