@@ -104,9 +104,30 @@ const MostrarTodosTipagem = async (req, res) => {
 
 const MostrarPokemonPeloID = async (req, res) => {
     try {
-        const pokemon = await pool.query(`SELECT pokemon_info_id, nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade
-        FROM public.pokemon_info
-        WHERE pokemon_info_id = ${req.params.id}`)
+        const pokemon = await pool.query(`SELECT
+        p.pokemon_info_id,
+        p.nome,
+        p.descricao,
+        p.altura,
+        p.peso,
+        c.categoria,
+        g.genero,
+        p.total,
+        p.hp,
+        p.ataque,
+        p.defesa,
+        p.especial_ataque,
+        p.especial_defesa,
+        p.velocidade,
+        p.imagem,
+        p.numero_pokemon,
+        f.fraqueza,
+        h.habilidade,
+        t.tipo
+    FROM
+        pokemon_info p INNER JOIN categorias c ON p.categoria_id = c.categoria_id INNER JOIN generos g ON p.genero_id = g.genero_id INNER JOIN pokemon_fraquezas pf ON p.pokemon_info_id = pf.pokemon_info_id
+        INNER JOIN fraquezas f ON pf.fraquezas_id = f.fraquezas_id
+        INNER JOIN pokemon_habilidades ph ON p.pokemon_info_id = ph.pokemon_info_id INNER JOIN habilidades h ON ph.habilidade_id = h.habilidade_id INNER JOIN pokemon_tipagem pt ON p.pokemon_info_id = pt.pokemon_info_id INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id WHERE p.pokemon_info_id = ${req.params.id};`)
         res.status(200).json(pokemon.rows[0])
     }
 
