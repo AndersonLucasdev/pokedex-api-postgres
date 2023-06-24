@@ -1,6 +1,21 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import pool from '../database/db'
+import { primeiraLetraMaiuscula } from './controllersInfo'
+import { Client } from "pg";
+
+
+const CriptografarSenha = async (senha) => {
+    const cliente = new Client(pool);
+    await cliente.connect()
+
+    try {
+        const resultado = await cliente.query('SELECT crypt($1, gen_salt(\'bf\')) AS hash', [senha]);
+        return resultado.rows[0].hash;
+      } finally {
+        await cliente.end();
+      }
+}
 
 
 const CadastrarUsuarioControllers = async (req, res) => {
@@ -12,16 +27,21 @@ const CadastrarUsuarioControllers = async (req, res) => {
         if (!usuario || !senha || ! confirmSenha) {
             res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
         } else {
+            const novoUsuario = primeiraLetraMaiuscula(usuario) 
+            const novaSenha = senha.trim()
+            const novaConfirmSenha = confirmSenha.trim()
 
-            if (senha.length < 6) {
+            if (novaSenha.length < 6) {
                 res.status(200).json({Mensagem: "A senha precisa ter no minimo 6 caracteres.", status:400})
             } else {
 
-                if (senha != confirmSenha) {
+                if (novaSenha != novaConfirmSenha) {
                     res.status(200).json({Mensagem: "As senha estão diferentes.", status:400})
                 } else {
 
-                    const CadastroUsuario = pool.query("INSERT INTO //tabela// Values($1, $2, $3)," [usuario, senha, confirmSenha])
+                    const senhaCriptografada = await CriptografarSenha(novaSenha);
+
+                    const CadastroUsuario = pool.query("INSERT INTO //tabela// Values($1, $2, $3)," [novoUsuario, senhaCriptografada, novaConfirmSenha])
                     if (!CadastroUsuario) {
                         res.status(200).json({Mensagem: "Erro na criação do usuario.", status:400})
                     } else {
@@ -32,7 +52,7 @@ const CadastrarUsuarioControllers = async (req, res) => {
                                         id: CadastroUsuario._id,
                                         usuario,
                                     },
-                                    Message: "Usuario cadastrada com sucesso."
+                                    Mensagem: "Usuario cadastrada com sucesso."
                                 }
                             )
                         }
@@ -56,8 +76,10 @@ const Login = async (req, res) => {
         if (!usuario || !senha) {
             res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
         }
-
-        const verificaUsuario = pool.query("Select /campo from /tabela")
+        const novoUsuario = primeiraLetraMaiuscula(usuario)
+        const novaSenha = senha.trim()
+        
+        const verificaUsuario = pool.query("Select /campo from /tabela where usuario = $1 and senha = $2", [novoUsuario, novaSenha])
         if (!verificaUsuario) {
             res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
         }
@@ -69,7 +91,7 @@ const Login = async (req, res) => {
 
         const token = pool.query("Select //token from //tabela")
 
-        res.cookie("token",token,{httpOnly:true})
+        res.cookie("token", token, {httpOnly:true})
         res.status(200).json({token:token, id:verificaUsuario._id, usuario:verificaUsuario.usuario})
     }
     catch {
@@ -84,16 +106,16 @@ const validarToken = async (req,res) =>{
     req.token = token
 
     if(!token){
-        return res.status(200).json({Message:"Token inválido.", status:400})
+        return res.status(200).json({Mensagem:"Token inválido.", status:400})
     }
 
     jwt.verify(token, process.env.SECRET_JWT, (err, decoded) =>{
         if(err){
             console.log("oi")
-            return res.status(200).json({Message:"Token inválido.", status:400})
+            return res.status(200).json({Mensagem:"Token inválido.", status:400})
         }else{
             req.usuario = decoded.usuario
-            return res.status(200).json({Message:"Token válido."})
+            return res.status(200).json({Mensagem:"Token válido."})
         }
     })
 }
@@ -103,12 +125,12 @@ const deletarToken = async (req, res) =>{
     const token = req.body.token || req.query.token || req.cookies.token || req.headers['x-access-token'];
 
     if(!token){
-       return res.status(200).json({Message:"Logout não autorizado.", status:400})
+       return res.status(200).json({Mensagem:"Logout não autorizado.", status:400})
     }
 
     res.cookie('token', null, {httpOnly:true})
     
-    return res.status(200).json({Message:"Você foi desconectado."})
+    return res.status(200).json({Mensagem:"Você foi desconectado."})
 
 }
 
@@ -117,12 +139,12 @@ const EncontrarUsuarios = async (req, res) => {
         //const usuario = await pool.query("Select //nome_usuario from usuarios")
 
         if (usuario.length === 0) {
-            return res.status(200).json({Message: 'Não há usuarios cadastrados.'})
+            return res.status(200).json({Mensagem: 'Não há usuarios cadastrados.'})
         }   else {
             res.status(200).json(usuario)
         }
     }  catch (error) {
-        res.status(500).json({Message: error.Message})
+        res.status(500).json({Mensagem: error.Mensagem})
     }
 } 
 
@@ -134,7 +156,7 @@ const EncontrarUsuario = async (req, res) => {
     }
 
     catch (erro){
-        return res.status(500).json({Message: erro.Message})
+        return res.status(500).json({Mensagem: erro.Mensagem})
     }
 }
 
@@ -143,16 +165,16 @@ const removeUsuarioID = async (req, res) => {
 
         const {id} = req
         if (!id) {
-            return res.status(200).json({Message: 'Id não informado.', status:400})
+            return res.status(200).json({Mensagem: 'Id não informado.', status:400})
         }
 
         //const deletado = await pool.query(`${id}`)
 
-        return res.status(200).json({Message: "Usuário excluido com sucesso.", deletado})
+        return res.status(200).json({Mensagem: "Usuário excluido com sucesso.", deletado})
     }
 
     catch (erro){
-        res.status(500).json({Message: erro.Message})
+        res.status(500).json({Mensagem: erro.Mensagem})
     }
 }
 
