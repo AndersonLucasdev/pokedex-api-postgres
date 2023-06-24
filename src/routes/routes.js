@@ -8,12 +8,12 @@ import {MostrarTodosPokemonsControllers, MostrarTodasCategorias, MostrarTodasFra
 const route = Router()
 
 // rotas mostrar
-route.post("/mostrar/pokemon", MostrarTodosPokemonsControllers)
-route.post("/mostrar/categoria", MostrarTodasCategorias)
-route.post("/mostrar/fraquezas", MostrarTodasFraquezas)
-route.post("/mostrar/generos", MostrarTodosGeneros)
-route.post("/mostrar/tipagem", MostrarTodosTipagem)
-route.post("/mostrar/habilidades", MostrarTodasHabilidades)
+route.get("/mostrar/pokemon", MostrarTodosPokemonsControllers)
+route.get("/mostrar/categoria", MostrarTodasCategorias)
+route.get("/mostrar/fraquezas", MostrarTodasFraquezas)
+route.get("/mostrar/generos", MostrarTodosGeneros)
+route.get("/mostrar/tipagem", MostrarTodosTipagem)
+route.get("/mostrar/habilidades", MostrarTodasHabilidades)
 
 
 // rotas cadastrar
