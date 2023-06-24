@@ -319,19 +319,19 @@ const CadastrarPokemonControllers = async (req, res) => {
   // Formatar os campos
   const nomeFormatado = primeiraLetraMaiuscula(nome);
   const descricaoFormatada = primeiraLetraMaiuscula(descricao);
-  const alturaFormatada = altura.trim();
-  const pesoFormatado = peso.trim();
+  const alturaFormatada = String(altura).trim();
+  const pesoFormatado = String(peso).trim();
   const categoriaFormatada = primeiraLetraMaiuscula(categoria);
   const generoFormatado = primeiraLetraMaiuscula(genero);
-  const totalFormatado = total.trim();
-  const hpFormatado = hp.trim();
-  const ataqueFormatado = ataque.trim();
-  const defesaFormatada = defesa.trim();
-  const especialAtaqueFormatado = especial_ataque.trim();
-  const especialDefesaFormatada = especial_defesa.trim();
-  const velocidadeFormatada = velocidade.trim();
+  const totalFormatado = String(total).trim();
+  const hpFormatado = String(hp).trim();
+  const ataqueFormatado = String(ataque).trim();
+  const defesaFormatada = String(defesa).trim();
+  const especialAtaqueFormatado = String(especial_ataque).trim();
+  const especialDefesaFormatada = String(especial_defesa).trim();
+  const velocidadeFormatada = String(velocidade).trim();
   const imagemFormatada = imagem.trim();
-  const numeroPokemonFormatado = numero_pokemon.trim();
+  const numeroPokemonFormatado = String(numero_pokemon).trim();
   const fraquezaFormatada = primeiraLetraMaiuscula(fraqueza);
   const habilidadeFormatada = primeiraLetraMaiuscula(habilidade);
   const tipagemFormatada = primeiraLetraMaiuscula(tipagem);
@@ -742,7 +742,7 @@ const MostrarTodosAleatorioControllers = async (req, res) => {
 
 
 function primeiraLetraMaiuscula(texto) {
-  return texto
+  return String(texto)
     .trim() // Remove espaços em branco no início e no final da string
     .replace(/\s+/g, ' ') // Remove espaços extras entre as palavras
     .toLowerCase() // Converte todo o texto para minúsculas
