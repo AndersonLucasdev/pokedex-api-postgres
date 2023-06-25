@@ -149,7 +149,7 @@ const MostrarPokemonPeloNome = async (req, res) => {
     ORDER BY numero_pokemon;
   `);
 
-    res.status(200).json(pokemon);
+    res.status(200).json(pokemon.rows);
   } catch (error) {
     return res.status(500).json({Mensagem: error.Mensagem });
   }
