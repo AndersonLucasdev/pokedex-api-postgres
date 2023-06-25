@@ -10,7 +10,7 @@ import Route from "./src/routes/routes.js"
 
 
 const app = express()
-const port = 8080
+const port = 3000
 
 
 // app.use(bodyParser.json() );       // to support JSON-encoded bodies
