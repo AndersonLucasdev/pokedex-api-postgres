@@ -150,6 +150,10 @@ const MostrarPokemonPeloNome = async (req, res) => {
   `);
 
     res.status(200).json(pokemon.rows);
+
+    if (pokemon.rows.length === 0) {
+      return res.status(200).json({Mensagem: 'Pokemon(s) não encontrado(s)', status: 400 });
+    }
   } catch (error) {
     return res.status(500).json({Mensagem: error.Mensagem });
   }
