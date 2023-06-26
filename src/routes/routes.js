@@ -1,9 +1,9 @@
 import { Router } from "express"
-import {MostrarTodosPokemonsControllers, MostrarTodasCategorias, MostrarTodasFraquezas,
-    MostrarTodosGeneros, MostrarTodosTipagem, MostrarTodasHabilidades, MostrarPokemonPeloID, MostrarPokemonPeloNome,
+import {MostrarTodosPokemonsControllers, MostrarTodosPokemonsAleatorio, MostrarTodasCategorias, MostrarTodasFraquezas,
+    MostrarTodosGeneros, MostrarPokemonPeloNome, MostrarTodosTipagem, MostrarTodasHabilidades, MostrarPokemonPeloID,
+    MostrarTodosPokemonsFraquezas, MostrarTodosPokemonsTipagem,
     CadastrarPokemonControllers, CadastrarCategoria, CadastrarFraqueza, CadastrarTipagem, CadastrarHabilidade,
-    ExcluirPokemonControllers, ExcluirCategoria, ExcluirFraqueza, ExcluirTipagem, ExcluirHabilidade, 
-    MostrarTodosAleatorioControllers, primeiraLetraMaiuscula} from "../controllers/controllersInfo.js"
+    ExcluirPokemonControllers, ExcluirCategoria, ExcluirFraqueza, ExcluirTipagem, ExcluirHabilidade} from "../controllers/controllersInfo.js"
 
 const route = Router()
 
@@ -16,6 +16,9 @@ route.get("/mostrar/tipagem", MostrarTodosTipagem)
 route.get("/mostrar/habilidades", MostrarTodasHabilidades)
 route.get("/mostrar/:id", MostrarPokemonPeloID)
 route.post("/mostrar/nome", MostrarPokemonPeloNome)
+route.get("/mostrar_aleatorio", MostrarTodosPokemonsAleatorio)
+route.post("/mostrar/por_tipagem", MostrarTodosPokemonsTipagem)
+route.post("/mostrar/por_fraquezas", MostrarTodosPokemonsFraquezas)
 
 // rotas cadastrar
 route.post("/cadastrar/pokemon", CadastrarPokemonControllers)
