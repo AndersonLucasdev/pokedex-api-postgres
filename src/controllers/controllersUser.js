@@ -5,19 +5,6 @@ import { primeiraLetraMaiuscula } from './controllersInfo'
 import { Client } from "pg";
 
 
-const CriptografarSenha = async (senha) => {
-    const cliente = new Client(pool);
-    await cliente.connect()
-
-    try {
-        const resultado = await cliente.query('SELECT crypt($1, gen_salt(\'bf\')) AS hash', [senha]);
-        return resultado.rows[0].hash;
-      } finally {
-        await cliente.end();
-      }
-}
-
-
 const CadastrarUsuarioControllers = async (req, res) => {
     try {
         const{
@@ -25,27 +12,28 @@ const CadastrarUsuarioControllers = async (req, res) => {
         } = req.body
 
         if (!usuario || !senha || ! confirmSenha) {
-            res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
+            return res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
         } else {
             const novoUsuario = primeiraLetraMaiuscula(usuario) 
             const novaSenha = senha.trim()
             const novaConfirmSenha = confirmSenha.trim()
 
             if (novaSenha.length < 6) {
-                res.status(200).json({Mensagem: "A senha precisa ter no minimo 6 caracteres.", status:400})
+                return res.status(200).json({Mensagem: "A senha precisa ter no minimo 6 caracteres.", status:400})
             } else {
 
                 if (novaSenha != novaConfirmSenha) {
-                    res.status(200).json({Mensagem: "As senha estão diferentes.", status:400})
+                    return res.status(200).json({Mensagem: "As senha estão diferentes.", status:400})
                 } else {
 
                     const verificaUsuarioExiste = await pool.query('SELECT * FROM administradores WHERE username = $1', [novoUsuario]);
                     if (verificaUsuarioExiste.rows.length > 0) {
-                      return res.status(200).json({ message: 'Usuário já existe', status:400 });
+                      return res.status(200).json({ Mensagem: 'Usuário já existe', status:400 });
                     } else {
-                        const senhaCriptografada = await CriptografarSenha(novaSenha);
+
+                        const senhaCriptografada = await bcrypt.hash(novaSenha, 10)
     
-                        const CadastroUsuario = pool.query("INSERT INTO //tabela// Values($1, $2, $3)," [novoUsuario, senhaCriptografada, novaConfirmSenha])
+                        const CadastroUsuario = await pool.query("INSERT INTO //tabela// Values($1, $2)," [novoUsuario, senhaCriptografada])
                         if (!CadastroUsuario) {
                             res.status(200).json({Mensagem: "Erro na criação do usuario.", status:400})
                         } else {
@@ -79,81 +67,109 @@ const Login = async (req, res) => {
         } = req.body
 
         if (!usuario || !senha) {
-            res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
+            return res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
         }
         const novoUsuario = primeiraLetraMaiuscula(usuario)
         const novaSenha = senha.trim()
         
-        const verificaUsuario = pool.query("Select usuername from administradores where usuario = $1", [novoUsuario])
+        const verificaUsuario = await pool.query("Select * from administradores where usuario = $1", [novoUsuario])
         if (verificaUsuario.rows.length === 0) {
-            res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
+            return res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
         }
 
-        const senhaValida = bcrypt.compareSync(senha, verificaUsuario.rows.senha)
+        const senhaValida = bcrypt.compareSync(novaSenha, verificaUsuario.rows.senha)
         if (!senhaValida) {
-            res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
+            return res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
         }
 
         const token = jwt.sign({ UsuarioId: verificaUsuario.rows[0].usuario_id }, process.env.SECRET_JWT, { expiresIn: '24h' });
-
+        res.cookie("token",token,{httpOnly:true})
         return res.status(200).json({ token });
     }
     catch {
-        res.status(500).json({Mensagem: erro.Mensagem})
+        return res.status(500).json({Mensagem: erro.Mensagem})
     }
 }
 
 //
+const validarToken = async (req, res) => {
+    
+    const token =  req.body.token || req.query.token || req.cookies.token || req.headers['x-access-token'];
+    req.token = token
+
+    if(!token){
+        return res.status(200).json({Mensagem:"Token inválido.", status:400})
+    }
+    
+    jwt.verify(token, process.env.SECRET_JWT, (err, decoded) =>{
+        if(err){
+            return res.status(200).json({Mensagem:"Token inválido.", status:400})
+        }else{
+            req.usuario = decoded.usuario
+            return res.status(200).json({Mensagem:"Token válido."})
+        }
+    })
+}
 
 const deletarToken = async (req, res) =>{
 
     const token = req.body.token || req.query.token || req.cookies.token || req.headers['x-access-token'];
 
     if(!token){
-       return res.status(200).json({Mensagem:"Logout não autorizado.", status:400})
+       return res.status(200).json({Message:"Logout não autorizado.", status:400})
     }
 
     res.cookie('token', null, {httpOnly:true})
     
-    return res.status(200).json({Mensagem:"Você foi desconectado."})
+    return res.status(200).json({Message:"Você foi desconectado."})
 
 }
 
-const EncontrarUsuarios = async (req, res) => {
+const EncontrarTodosUsuarios = async (req, res) => {
     try {
-        //const usuario = await pool.query("Select //nome_usuario from usuarios")
+        const Usuario = await pool.query(`SELECT username
+        FROM administradores order by usuario_id;`)
 
-        if (usuario.length === 0) {
+        if (Usuario.length === 0) {
             return res.status(200).json({Mensagem: 'Não há usuarios cadastrados.', status:400})
-        }   else {
-            res.status(200).json(usuario)
-        }
+        }   
+        
+        return res.status(200).json(Usuario)
+        
     }  catch (error) {
-        res.status(500).json({Mensagem: error.Mensagem})
+        return res.status(500).json({Mensagem: error.Mensagem})
     }
 } 
 
-const EncontrarUsuario = async (req, res) => {
+const EncontrarUsuarioId = async (req, res) => {
     try {
-        const usuario = req.usuario
-
-        res.status(200).json(usuario)
-    }
-
-    catch (erro){
-        return res.status(500).json({Mensagem: erro.Mensagem})
-    }
+        const Usuario = await pool.query(`SELECT
+          *
+      FROM
+          administradoresa
+      WHERE
+          a.usuario_id = ${req.params.id};`)
+          
+          return res.status(200).json(Usuario.rows[0])
+      }
+  
+      catch (erro){
+          return res.status(500).json({Message: erro.Message})
+      }
 }
 
 const removeUsuarioID = async (req, res) => {
     try {
+        const {usuario_id} = req
 
-        const {id} = req
         if (!id) {
             return res.status(200).json({Mensagem: 'Id não informado.', status:400})
         }
 
-        //const deletado = await pool.query(`${id}`)
+        await pool.query(
+            'Delete from administradores where usuario_id = ($1)',
+            [usuario_id]
+          );
 
         return res.status(200).json({Mensagem: "Usuário excluido com sucesso.", deletado})
     }
@@ -164,5 +180,5 @@ const removeUsuarioID = async (req, res) => {
 }
 
 export {
-    CadastrarUsuarioControllers, Login, EncontrarUsuario, EncontrarUsuarios, removeUsuarioID, validarToken, deletarToken
+    CadastrarUsuarioControllers, Login, EncontrarUsuarioId, EncontrarTodosUsuarios, removeUsuarioID, validarToken, deletarToken
 }
