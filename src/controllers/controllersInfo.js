@@ -713,16 +713,8 @@ const CadastrarPokemonControllers = async (req, res) => {
       'SELECT categoria_id FROM categorias WHERE categoria = $1',
       [categoriaFormatada]
     );
-
-    if (verificaCategoria.rows.length > 0) {
-      categoria_id = verificaCategoria.rows[0].categoria_id;
-    } else {
-      const cadastroCategoria = await pool.query(
-        'INSERT INTO categorias (categoria) VALUES ($1) RETURNING categoria_id',
-        [categoriaFormatada]
-      );
-      categoria_id = cadastroCategoria.rows[0].categoria_id;
-    }
+    categoria_id = verificaCategoria.rows[0].categoria_id;
+    
 
     // Verifica fraqueza
     let fraquezas_id;
@@ -735,17 +727,8 @@ const CadastrarPokemonControllers = async (req, res) => {
         'SELECT fraquezas_id FROM fraquezas WHERE fraqueza = $1',
         [fraquezaFormatada]
       );
-
-      if (verificaFraqueza.rows.length > 0) {
-        fraquezas_id = verificaFraqueza.rows[0].fraquezas_id;
-      } else {
-        const cadastroFraqueza = await pool.query(
-          'INSERT INTO fraquezas (fraqueza) VALUES ($1) RETURNING fraquezas_id',
-          [fraquezaFormatada]
-        );
-        fraquezas_id = cadastroFraqueza.rows[0].fraquezas_id;
-        list_fraqueza_id.push(fraquezas_id);
-      }
+    fraquezas_id = verificaFraqueza.rows[0].fraquezas_id;
+    list_fraqueza_id.push(fraquezas_id);  
     }
 
     // Verifica habilidade
@@ -759,17 +742,8 @@ const CadastrarPokemonControllers = async (req, res) => {
         'SELECT habilidade_id FROM habilidades WHERE habilidade = $1',
         [habilidadeFormatada]
       );
-
-      if (verificaHabilidade.rows.length > 0) {
-        habilidade_id = verificaHabilidade.rows[0].habilidade_id;
-      } else {
-        const cadastroHabilidade = await pool.query(
-          'INSERT INTO habilidades (habilidade) VALUES ($1) RETURNING habilidade_id',
-          [habilidadeFormatada]
-        );
-        habilidade_id = cadastroHabilidade.rows[0].habilidade_id;
-        list_habilidade_id.push(habilidade_id);
-      }
+    habilidade_id = verificaHabilidade.rows[0].habilidade_id;
+    list_habilidade_id.push(habilidade_id);
     }
 
     // Verifica genero
@@ -795,17 +769,8 @@ const CadastrarPokemonControllers = async (req, res) => {
         'SELECT tipagem_id FROM tipagem WHERE tipo = $1',
         [tipagem_nome]
       );
-
-      if (verificaTipagem.rows.length > 0) {
-        tipagem_id = verificaTipagem.rows[0].tipagem_id;
-      } else {
-        const cadastroTipagem = await pool.query(
-          'INSERT INTO tipagem (tipo) VALUES ($1) RETURNING tipagem_id',
-          [tipagem_nome]
-        );
-        tipagem_id = cadastroTipagem.rows[0].tipagem_id;
-        list_tipagem_id.push(tipagem_id);
-      }
+      tipagem_id = verificaTipagem.rows[0].tipagem_id;
+      list_tipagem_id.push(tipagem_id);
     }
 
     const verificaNumeroPokemon = await pool.query(
