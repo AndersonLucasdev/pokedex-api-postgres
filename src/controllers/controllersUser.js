@@ -39,22 +39,27 @@ const CadastrarUsuarioControllers = async (req, res) => {
                     res.status(200).json({Mensagem: "As senha estão diferentes.", status:400})
                 } else {
 
-                    const senhaCriptografada = await CriptografarSenha(novaSenha);
-
-                    const CadastroUsuario = pool.query("INSERT INTO //tabela// Values($1, $2, $3)," [novoUsuario, senhaCriptografada, novaConfirmSenha])
-                    if (!CadastroUsuario) {
-                        res.status(200).json({Mensagem: "Erro na criação do usuario.", status:400})
+                    const verificaUsuarioExiste = await pool.query('SELECT * FROM administradores WHERE username = $1', [novoUsuario]);
+                    if (verificaUsuarioExiste.rows.length > 0) {
+                      return res.status(200).json({ message: 'Usuário já existe', status:400 });
                     } else {
-                        {
-                            res.status(201).json(
-                                {
-                                    user: {
-                                        id: CadastroUsuario._id,
-                                        usuario,
-                                    },
-                                    Mensagem: "Usuario cadastrada com sucesso."
-                                }
-                            )
+                        const senhaCriptografada = await CriptografarSenha(novaSenha);
+    
+                        const CadastroUsuario = pool.query("INSERT INTO //tabela// Values($1, $2, $3)," [novoUsuario, senhaCriptografada, novaConfirmSenha])
+                        if (!CadastroUsuario) {
+                            res.status(200).json({Mensagem: "Erro na criação do usuario.", status:400})
+                        } else {
+                            {
+                                res.status(201).json(
+                                    {
+                                        user: {
+                                            id: CadastroUsuario._id,
+                                            usuario,
+                                        },
+                                        Mensagem: "Usuario cadastrada com sucesso."
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -79,20 +84,19 @@ const Login = async (req, res) => {
         const novoUsuario = primeiraLetraMaiuscula(usuario)
         const novaSenha = senha.trim()
         
-        const verificaUsuario = pool.query("Select /campo from /tabela where usuario = $1 and senha = $2", [novoUsuario, novaSenha])
-        if (!verificaUsuario) {
+        const verificaUsuario = pool.query("Select usuername from administradores where usuario = $1", [novoUsuario])
+        if (verificaUsuario.rows.length === 0) {
             res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
         }
 
-        const senhaValida = bcrypt.compareSync(senha, verificaUsuario.senha)
+        const senhaValida = bcrypt.compareSync(senha, verificaUsuario.rows.senha)
         if (!senhaValida) {
             res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
         }
 
-        const token = pool.query("Select //token from //tabela")
+        const token = jwt.sign({ UsuarioId: verificaUsuario.rows[0].usuario_id }, process.env.SECRET_JWT, { expiresIn: '24h' });
 
-        res.cookie("token", token, {httpOnly:true})
-        res.status(200).json({token:token, id:verificaUsuario._id, usuario:verificaUsuario.usuario})
+        return res.status(200).json({ token });
     }
     catch {
         res.status(500).json({Mensagem: erro.Mensagem})
@@ -100,25 +104,6 @@ const Login = async (req, res) => {
 }
 
 //
-const validarToken = async (req,res) =>{
-
-    const token =  req.body.token || req.query.token || req.cookies.token || req.headers['x-access-token'];
-    req.token = token
-
-    if(!token){
-        return res.status(200).json({Mensagem:"Token inválido.", status:400})
-    }
-
-    jwt.verify(token, process.env.SECRET_JWT, (err, decoded) =>{
-        if(err){
-            console.log("oi")
-            return res.status(200).json({Mensagem:"Token inválido.", status:400})
-        }else{
-            req.usuario = decoded.usuario
-            return res.status(200).json({Mensagem:"Token válido."})
-        }
-    })
-}
 
 const deletarToken = async (req, res) =>{
 
@@ -139,7 +124,7 @@ const EncontrarUsuarios = async (req, res) => {
         //const usuario = await pool.query("Select //nome_usuario from usuarios")
 
         if (usuario.length === 0) {
-            return res.status(200).json({Mensagem: 'Não há usuarios cadastrados.'})
+            return res.status(200).json({Mensagem: 'Não há usuarios cadastrados.', status:400})
         }   else {
             res.status(200).json(usuario)
         }

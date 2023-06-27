@@ -10,7 +10,7 @@ const MostrarTodosPokemonsControllers = async (req, res) => {
       `)
         
         if (Pokemons.length === 0) {
-            res.status(200).json({Mensagem: "Não há pokemons cadastrados."})
+            res.status(200).json({Mensagem: "Não há pokemons cadastrados.", status:400})
         }
 
         res.status(200).json(Pokemons.rows)
@@ -26,7 +26,7 @@ const MostrarTodasCategorias = async (req, res) => {
     
 
     if (Categorias.length === 0) {
-        res.status(200).json({Mensagem: "Não há categorias cadastrados."})
+        res.status(200).json({Mensagem: "Não há categorias cadastrados.", status:400})
     }
 
     res.status(200).json(Categorias.rows)
@@ -42,7 +42,7 @@ const MostrarTodasFraquezas = async (req, res) => {
     
 
     if (fraquezas.length === 0) {
-        res.status(200).json({Mensagem: "Não há fraquezas cadastrados."})
+        res.status(200).json({Mensagem: "Não há fraquezas cadastrados.", status:400})
     }
 
     res.status(200).json(fraquezas.rows)
@@ -58,7 +58,7 @@ const MostrarTodosGeneros = async (req, res) => {
     
 
     if (generos.length === 0) {
-        res.status(200).json({Mensagem: "Não há generos cadastrados."})
+        res.status(200).json({Mensagem: "Não há generos cadastrados.", status:400})
     }
 
     res.status(200).json(generos.rows)
@@ -74,7 +74,7 @@ const MostrarTodasHabilidades = async (req, res) => {
     
 
     if (habilidades.length === 0) {
-        res.status(200).json({Mensagem: "Não há habilidades cadastrados."})
+        res.status(200).json({Mensagem: "Não há habilidades cadastrados.", status:400})
     }
 
     res.status(200).json(habilidades.rows)
@@ -90,7 +90,7 @@ const MostrarTodosTipagem = async (req, res) => {
     
   
     if (tipagem.length === 0) {
-        res.status(200).json({Mensagem: "Não há tipos cadastrados."})
+        res.status(200).json({Mensagem: "Não há tipos cadastrados.", status:400})
     
   
     res.status(200).json(tipagem.rows)
@@ -151,7 +151,7 @@ const MostrarTodosPokemonsFraquezas = async (req, res) => {
 
   try {
     if (!fraqueza) {
-      return res.status(400).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+      return res.status(200).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const pokemon = await pool.query(
@@ -175,7 +175,7 @@ const MostrarTodosPokemonsTipagem = async (req, res) => {
 
 try {
   if (!tipagem) {
-    return res.status(400).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    return res.status(200).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
   }
 
   const pokemon = await pool.query(
@@ -225,7 +225,7 @@ const MostrarPokemonPeloNome = async (req, res) => {
     `);
 
     if (pokemon.rows.length === 0) {
-      return res.status(400).json({ mensagem: 'Pokemon(s) não encontrado(s)' });
+      return res.status(200).json({ mensagem: 'Pokemon(s) não encontrado(s)', status:400 });
     }
 
     return res.status(200).json(pokemon.rows);
@@ -242,7 +242,7 @@ const MostrarTodosPokemonsAleatorio = async (req, res) => {
     FROM pokemon_info ORDER BY RANDOM()`)
 
     if (Pokemons.length === 0) {
-      res.status(200).json({Mensagem: "Não há pokemons cadastrados."})
+      res.status(200).json({Mensagem: "Não há pokemons cadastrados.", status:400})
     }
 
     res.status(200).json(Pokemons.rows)
@@ -254,19 +254,19 @@ const MostrarTodosPokemonsAleatorio = async (req, res) => {
 
 
 
-
 // função de cadastrar pokemon
 const CadastrarCategoria = async (req, res) => {
   const {
-    categoria
+    categoria, imagem_categoria
   } = req.body
 
   try {
     if (!categoria) {
-      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const nova_categoria = primeiraLetraMaiuscula(categoria)
+    const nova_categoria_imagem = imagem_categoria.trim()
 
     let categoria_id;
     const verificaCategoria = await pool.query(
@@ -278,8 +278,8 @@ const CadastrarCategoria = async (req, res) => {
       categoria_id = verificaCategoria.rows[0].categoria_id;
     } else {
       const cadastroCategoria = await pool.query(
-        'INSERT INTO categorias (categoria) VALUES ($1) RETURNING categoria_id',
-        [nova_categoria]
+        'INSERT INTO categorias (categoria, imagem_categoria) VALUES ($1, $2)',
+        [nova_categoria, nova_categoria_imagem]
       );
       categoria_id = cadastroCategoria.rows[0].categoria_id;
     }
@@ -291,15 +291,16 @@ const CadastrarCategoria = async (req, res) => {
 
 const CadastrarFraqueza = async (req, res) => {
   const {
-    fraqueza
+    fraqueza, imagem_fraqueza
   } = req.body
 
   try {
     if (!fraqueza) {
-      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const nova_fraqueza = primeiraLetraMaiuscula(fraqueza)
+    const nova_imagem_fraqueza = imagem_fraqueza.trim()
 
     let fraquezas_id;
       const verificaFraqueza = await pool.query(
@@ -311,8 +312,8 @@ const CadastrarFraqueza = async (req, res) => {
         fraquezas_id = verificaFraqueza.rows[0].fraquezas_id;
       } else {
         const cadastroFraqueza = await pool.query(
-          'INSERT INTO fraquezas (fraqueza) VALUES ($1) RETURNING fraquezas_id',
-          [nova_fraqueza]
+          'INSERT INTO fraquezas (fraqueza, imagem_fraqueza) VALUES ($1)',
+          [nova_fraqueza, nova_imagem_fraqueza]
         );
         fraquezas_id = cadastroFraqueza.rows[0].fraquezas_id;
     }
@@ -325,15 +326,16 @@ const CadastrarFraqueza = async (req, res) => {
 
 const CadastrarHabilidade = async (req, res) => {
   const {
-    habilidade
+    habilidade, imagem_habilidade
   } = req.body
 
   try {
     if (!habilidade) {
-      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const nova_habilidade = primeiraLetraMaiuscula(habilidade)
+    const nova_imagem_habilidade = imagem_habilidade.trim()
     let habilidade_id;
     const verificaHabilidade = await pool.query(
       'SELECT habilidade_id FROM habilidades WHERE habilidade = $1',
@@ -344,8 +346,8 @@ const CadastrarHabilidade = async (req, res) => {
       habilidade_id = verificaHabilidade.rows[0].habilidade_id;
     } else {
       const cadastroHabilidade = await pool.query(
-        'INSERT INTO habilidades (habilidade) VALUES ($1) RETURNING habilidade_id',
-        [nova_habilidade]
+        'INSERT INTO habilidades (habilidade, imagem_habilidade) VALUES ($1)',
+        [nova_habilidade, nova_imagem_habilidade]
       );
       habilidade_id = cadastroHabilidade.rows[0].habilidade_id;
     }
@@ -358,15 +360,16 @@ const CadastrarHabilidade = async (req, res) => {
 
 const CadastrarTipagem = async (req, res) => {
   const {
-    tipagem
+    tipagem, imagem_tipagem
   } = req.body
 
   try {
     if (!tipagem) {
-      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const nova_tipagem = primeiraLetraMaiuscula(tipagem)
+    const nova_imagem_habilidade = imagem_tipagem.trim()
 
     let tipagem_id;
     const verificaTipagem = await pool.query(
@@ -379,7 +382,7 @@ const CadastrarTipagem = async (req, res) => {
     } else {
       const cadastroTipagem = await pool.query(
         'INSERT INTO tipagem (tipo) VALUES ($1) RETURNING tipagem_id',
-        [nova_tipagem]
+        [nova_tipagem, nova_imagem_habilidade]
       );
       tipagem_id = cadastroTipagem.rows[0].tipagem_id;
     }
@@ -448,9 +451,10 @@ const CadastrarPokemonControllers = async (req, res) => {
       !imagemFormatada ||
       !numeroPokemonFormatado
     ) {
-        return res.status(400).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+        return res.status(200).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
       }
       let total = (parseFloat(ataque) + parseFloat(defesa) + parseFloat(hp) + parseFloat(especialAtaqueFormatado) + parseFloat(especialDefesaFormatada) + parseFloat(velocidade)) / 6
+
 
     // Verifica categoria
     let categoria_id;
@@ -527,7 +531,7 @@ const CadastrarPokemonControllers = async (req, res) => {
     if (verificaGenero.rows.length > 0) {
       genero_id = verificaGenero.rows[0].genero_id;
     } else {
-      return res.status(400).json({ Mensagem: 'Gênero inválido.', status: 400 });
+      return res.status(200).json({ Mensagem: 'Gênero inválido.', status: 400 });
     }
 
     // Verifica tipagem
@@ -553,6 +557,14 @@ const CadastrarPokemonControllers = async (req, res) => {
       }
     }
 
+    const verificaNumeroPokemon = await pool.query(
+      'SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1',
+      [numeroPokemonFormatado]
+    );
+
+    if (verificaNumeroPokemon.rows.length > 0) {
+      return res.status(200).json({Mensagem: 'Número pokemon já cadastrado!', status: 400 });
+    }
 
       // Inserindo nas tabelas
       const CadastroPokemon = await pool.query(
@@ -634,7 +646,7 @@ const ExcluirCategoria = async (req, res) => {
 
   try {
     if (!categoria) {
-      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const novaCategoria = primeiraLetraMaiuscula(categoria)
@@ -677,7 +689,7 @@ const ExcluirFraqueza = async (req, res) => {
 
   try {
     if (!fraqueza) {
-      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const NovaFraqueza = primeiraLetraMaiuscula(fraqueza)
@@ -704,6 +716,7 @@ const ExcluirFraqueza = async (req, res) => {
       );
       res.status(200).json({Mensagem: 'Categoria excluida com sucesso.' });
     } else {
+
       return res.status(200).json({Message: "A categoria está sendo usada!", status: 400})
       
     }
@@ -720,7 +733,7 @@ const ExcluirHabilidade = async (req, res) => {
 
   try {
     if (!habilidade) {
-      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const NovaHabilidade = primeiraLetraMaiuscula(habilidade)
@@ -764,7 +777,7 @@ const ExcluirTipagem = async (req, res) => {
 
   try {
     if (!tipagem) {
-      return res.status(400).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const NovaTipagem = primeiraLetraMaiuscula(tipagem)
