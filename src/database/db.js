@@ -103,4 +103,3 @@ const pool = new Pool({
   createTables();
 
 export default pool 
-

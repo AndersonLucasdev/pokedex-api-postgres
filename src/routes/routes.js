@@ -5,7 +5,7 @@ import {MostrarTodosPokemonsControllers, MostrarTodosPokemonsAleatorio, MostrarT
     CadastrarPokemonControllers, CadastrarCategoria, CadastrarFraqueza, CadastrarTipagem, CadastrarHabilidade,
     ExcluirPokemonControllers, ExcluirCategoria, ExcluirFraqueza, ExcluirTipagem, ExcluirHabilidade} from "../controllers/controllersInfo.js"
 
-import { CadastrarUsuarioControllers, Login, validarToken, deletarToken, EncontrarTodosUsuarios, EncontrarUsuarioId, removeUsuarioID } from "../controllers/controllersUser.js"
+import { CadastrarUsuarioControllers, Login, validarToken, deletarToken, EncontrarUsuarioId, removeUsuarioID, EncontrarTodosUsuarios } from "../controllers/controllersUser.js"
 
 
 const route = Router()
@@ -41,8 +41,8 @@ route.delete("/excluir/habilidade", ExcluirHabilidade)
 
 // usuarios
 // rotas mostrar
-route.get("/mostrar/usuarios", EncontrarTodosUsuarios)
 route.get("/mostrar/usuario/:id", EncontrarUsuarioId)
+route.get("/mostrar_usuarios", EncontrarTodosUsuarios)
 
 // rotas cadastrar/logar
 route.post("/cadastro/usuario", CadastrarUsuarioControllers)
@@ -53,7 +53,7 @@ route.post("/validar/token", validarToken)
 
 // rotas excluir
 route.post("/deletar/token", deletarToken)
-route.delete("/excluir/usuario/:id", removeUsuarioID)
+route.delete("/excluir_usuario/:id", removeUsuarioID)
 
 
 

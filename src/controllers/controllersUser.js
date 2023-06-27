@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import pool from '../database/db'
-import { primeiraLetraMaiuscula } from './controllersInfo'
-import { Client } from "pg";
+import pool from '../database/db.js'
+import { primeiraLetraMaiuscula } from './controllersInfo.js'
+
 
 
 const CadastrarUsuarioControllers = async (req, res) => {
@@ -14,7 +14,7 @@ const CadastrarUsuarioControllers = async (req, res) => {
         if (!nome || !senha || ! confirmSenha) {
             return res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
         } else {
-            const novoUsuario = primeiraLetraMaiuscula(usuario) 
+            const novoUsuario = primeiraLetraMaiuscula(nome) 
             const novaSenha = senha.trim()
             const novaConfirmSenha = confirmSenha.trim()
 
@@ -33,21 +33,19 @@ const CadastrarUsuarioControllers = async (req, res) => {
 
                         const senhaCriptografada = await bcrypt.hash(novaSenha, 10)
     
-                        const CadastroUsuario = await pool.query("INSERT INTO usuarios Values($1, $2)," [novoUsuario, senhaCriptografada])
+                        const CadastroUsuario = await pool.query("INSERT INTO usuarios (nome, senha) VALUES ($1, $2)", [novoUsuario, senhaCriptografada])
                         if (!CadastroUsuario) {
                             res.status(200).json({Mensagem: "Erro na criação do usuario.", status:400})
                         } else {
-                            {
-                                res.status(201).json(
-                                    {
-                                        user: {
-                                            id: CadastroUsuario.user_id,
-                                            nome,
-                                        },
-                                        Mensagem: "Usuario cadastrada com sucesso."
-                                    }
-                                )
-                            }
+                            res.status(201).json(
+                                {
+                                    user: {
+                                        id: CadastroUsuario.user_id,
+                                        nome,
+                                    },
+                                    Mensagem: "Usuario cadastrada com sucesso."
+                                }
+                            ) 
                         }
                     }
                 }
@@ -69,13 +67,15 @@ const Login = async (req, res) => {
         if (!nome || !senha) {
             return res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
         }
+
         const novoUsuario = primeiraLetraMaiuscula(nome)
         const novaSenha = senha.trim()
         
-        const verificaUsuario = await pool.query("Select * from administradores where nome = $1", [novoUsuario])
+        const verificaUsuario = await pool.query("Select * from usuarios where nome = $1", [novoUsuario])
         if (verificaUsuario.rows.length === 0) {
             return res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
         }
+        console.log(verificaUsuario)
 
         const senhaValida = bcrypt.compareSync(novaSenha, verificaUsuario.rows.senha)
         if (!senhaValida) {
@@ -86,7 +86,7 @@ const Login = async (req, res) => {
         res.cookie("token",token,{httpOnly:true})
         return res.status(200).json({ token });
     }
-    catch {
+    catch (erro) {
         return res.status(500).json({Mensagem: erro.Mensagem})
     }
 }
@@ -127,24 +127,23 @@ const deletarToken = async (req, res) =>{
 
 const EncontrarTodosUsuarios = async (req, res) => {
     try {
-        const Usuario = await pool.query(`SELECT nome, senha
-        FROM usuarios order by user_id;`)
+        const Usuarios = await pool.query('SELECT nome FROM usuarios')
+      
+        if (Usuarios.length === 0) {
+            res.status(200).json({Mensagem: "Não há usuários cadastrados.", status:400})
+        }
 
-        if (Usuario.length === 0) {
-            return res.status(200).json({Mensagem: 'Não há usuarios cadastrados.', status:400})
-        }   
-        
-        return res.status(200).json(Usuario)
-        
-    }  catch (error) {
-        return res.status(500).json({Mensagem: error.Mensagem})
+        res.status(200).json(Usuarios.rows)
+
+    } catch (erro) {
+        res.status(500).json({Mensagem: erro.Mensagem})
     }
-} 
+}
 
 const EncontrarUsuarioId = async (req, res) => {
     try {
         const Usuario = await pool.query(`SELECT
-          *
+          nome
       FROM
           usuarios
       WHERE
@@ -160,18 +159,14 @@ const EncontrarUsuarioId = async (req, res) => {
 
 const removeUsuarioID = async (req, res) => {
     try {
-        const {usuario_id} = req
-
-        if (!id) {
-            return res.status(200).json({Mensagem: 'Id não informado.', status:400})
-        }
+        const {id} = req
 
         await pool.query(
-            'Delete from usuarios where user_id = ($1)',
-            [usuario_id]
+            'Delete from usuarios where user_id = $1',
+            [id]
           );
 
-        return res.status(200).json({Mensagem: "Usuário excluido com sucesso.", deletado})
+        return res.status(200).json({Mensagem: "Usuário excluido com sucesso."})
     }
 
     catch (erro){
@@ -180,5 +175,5 @@ const removeUsuarioID = async (req, res) => {
 }
 
 export {
-    CadastrarUsuarioControllers, Login, EncontrarUsuarioId, EncontrarTodosUsuarios, removeUsuarioID, validarToken, deletarToken
+    CadastrarUsuarioControllers, Login, EncontrarUsuarioId, removeUsuarioID, validarToken, deletarToken, EncontrarTodosUsuarios
 }
