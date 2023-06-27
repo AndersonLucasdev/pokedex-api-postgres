@@ -8,10 +8,10 @@ import { Client } from "pg";
 const CadastrarUsuarioControllers = async (req, res) => {
     try {
         const{
-            usuario, senha, confirmSenha
+            nome, senha, confirmSenha
         } = req.body
 
-        if (!usuario || !senha || ! confirmSenha) {
+        if (!nome || !senha || ! confirmSenha) {
             return res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
         } else {
             const novoUsuario = primeiraLetraMaiuscula(usuario) 
@@ -26,14 +26,14 @@ const CadastrarUsuarioControllers = async (req, res) => {
                     return res.status(200).json({Mensagem: "As senha estão diferentes.", status:400})
                 } else {
 
-                    const verificaUsuarioExiste = await pool.query('SELECT * FROM administradores WHERE username = $1', [novoUsuario]);
+                    const verificaUsuarioExiste = await pool.query('SELECT * FROM usuarios WHERE nome = $1', [novoUsuario]);
                     if (verificaUsuarioExiste.rows.length > 0) {
                       return res.status(200).json({ Mensagem: 'Usuário já existe', status:400 });
                     } else {
 
                         const senhaCriptografada = await bcrypt.hash(novaSenha, 10)
     
-                        const CadastroUsuario = await pool.query("INSERT INTO //tabela// Values($1, $2)," [novoUsuario, senhaCriptografada])
+                        const CadastroUsuario = await pool.query("INSERT INTO usuarios Values($1, $2)," [novoUsuario, senhaCriptografada])
                         if (!CadastroUsuario) {
                             res.status(200).json({Mensagem: "Erro na criação do usuario.", status:400})
                         } else {
@@ -41,8 +41,8 @@ const CadastrarUsuarioControllers = async (req, res) => {
                                 res.status(201).json(
                                     {
                                         user: {
-                                            id: CadastroUsuario._id,
-                                            usuario,
+                                            id: CadastroUsuario.user_id,
+                                            nome,
                                         },
                                         Mensagem: "Usuario cadastrada com sucesso."
                                     }
@@ -63,16 +63,16 @@ const CadastrarUsuarioControllers = async (req, res) => {
 const Login = async (req, res) => {
     try {
         const {
-            usuario, senha
+            nome, senha
         } = req.body
 
-        if (!usuario || !senha) {
+        if (!nome || !senha) {
             return res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
         }
-        const novoUsuario = primeiraLetraMaiuscula(usuario)
+        const novoUsuario = primeiraLetraMaiuscula(nome)
         const novaSenha = senha.trim()
         
-        const verificaUsuario = await pool.query("Select * from administradores where usuario = $1", [novoUsuario])
+        const verificaUsuario = await pool.query("Select * from administradores where nome = $1", [novoUsuario])
         if (verificaUsuario.rows.length === 0) {
             return res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
         }
@@ -82,7 +82,7 @@ const Login = async (req, res) => {
             return res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
         }
 
-        const token = jwt.sign({ UsuarioId: verificaUsuario.rows[0].usuario_id }, process.env.SECRET_JWT, { expiresIn: '24h' });
+        const token = jwt.sign({ UsuarioId: verificaUsuario.rows[0].user_id }, process.env.SECRET_JWT, { expiresIn: '24h' });
         res.cookie("token",token,{httpOnly:true})
         return res.status(200).json({ token });
     }
@@ -127,8 +127,8 @@ const deletarToken = async (req, res) =>{
 
 const EncontrarTodosUsuarios = async (req, res) => {
     try {
-        const Usuario = await pool.query(`SELECT username
-        FROM administradores order by usuario_id;`)
+        const Usuario = await pool.query(`SELECT nome, senha
+        FROM usuarios order by user_id;`)
 
         if (Usuario.length === 0) {
             return res.status(200).json({Mensagem: 'Não há usuarios cadastrados.', status:400})
@@ -146,9 +146,9 @@ const EncontrarUsuarioId = async (req, res) => {
         const Usuario = await pool.query(`SELECT
           *
       FROM
-          administradoresa
+          usuarios
       WHERE
-          a.usuario_id = ${req.params.id};`)
+          user_id = ${req.params.id};`)
           
           return res.status(200).json(Usuario.rows[0])
       }
@@ -167,7 +167,7 @@ const removeUsuarioID = async (req, res) => {
         }
 
         await pool.query(
-            'Delete from administradores where usuario_id = ($1)',
+            'Delete from usuarios where user_id = ($1)',
             [usuario_id]
           );
 
