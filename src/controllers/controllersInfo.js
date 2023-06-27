@@ -4,9 +4,59 @@ import pool from "../database/db.js"
 // funções mostrar
 const MostrarTodosPokemonsControllers = async (req, res) => {
    try {
-        const Pokemons = await pool.query(`SELECT pokemon_info_id, nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade, imagem, numero_pokemon
-        FROM public.pokemon_info order by numero_pokemon;
-      
+        const Pokemons = await pool.query(`SELECT
+        p.pokemon_info_id,
+        p.nome,
+        p.descricao,
+        p.altura,
+        p.peso,
+        c.categoria,
+        string_agg(DISTINCT f.imagem_categoria, ', ') as img_categoria,
+        g.genero,
+        p.total,
+        p.hp,
+        p.ataque,
+        p.defesa,
+        p.especial_ataque,
+        p.especial_defesa,
+        p.velocidade,
+        p.imagem,
+        p.numero_pokemon,
+        string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
+        string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
+        string_agg(DISTINCT h.habilidade, ', ') as habilidades,
+        string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
+        string_agg(DISTINCT t.tipo, ', ') as tipos,
+        string_agg(DISTINCT f.imagem_tipagem, ', ') as img_tipo
+    FROM
+        pokemon_info p
+        INNER JOIN categorias c ON p.categoria_id = c.categoria_id
+        INNER JOIN generos g ON p.genero_id = g.genero_id
+        INNER JOIN pokemon_fraquezas pf ON p.pokemon_info_id = pf.pokemon_info_id
+        INNER JOIN fraquezas f ON pf.fraquezas_id = f.fraquezas_id
+        INNER JOIN pokemon_habilidades ph ON p.pokemon_info_id = ph.pokemon_info_id
+        INNER JOIN habilidades h ON ph.habilidade_id = h.habilidade_id
+        INNER JOIN pokemon_tipagem pt ON p.pokemon_info_id = pt.pokemon_info_id
+        INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
+    GROUP BY
+        p.pokemon_info_id,
+        p.nome,
+        p.descricao,
+        p.altura,
+        p.peso,
+        c.categoria,
+        g.genero,
+        p.total,
+        p.hp,
+        p.ataque,
+        p.defesa,
+        p.especial_ataque,
+        p.especial_defesa,
+        p.velocidade,
+        p.imagem,
+        p.numero_pokemon
+        
+    order by p.numero_pokemon
       `)
         
         if (Pokemons.length === 0) {
@@ -111,6 +161,7 @@ const MostrarPokemonPeloID = async (req, res) => {
       p.altura,
       p.peso,
       c.categoria,
+      string_agg(DISTINCT c.imagem_categoria, ', ') as img_categoria,
       g.genero,
       p.total,
       p.hp,
@@ -122,8 +173,11 @@ const MostrarPokemonPeloID = async (req, res) => {
       p.imagem,
       p.numero_pokemon,
       string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
+      string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
       string_agg(DISTINCT h.habilidade, ', ') as habilidades,
-      string_agg(DISTINCT t.tipo, ', ') as tipos
+      string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
+      string_agg(DISTINCT t.tipo, ', ') as tipos,
+      string_agg(DISTINCT f.imagem_tipagem, ', ') as img_tipo
   FROM
       pokemon_info p
       INNER JOIN categorias c ON p.categoria_id = c.categoria_id
@@ -172,11 +226,58 @@ const MostrarTodosPokemonsFraquezas = async (req, res) => {
     }
 
     const pokemon = await pool.query(
-      `SELECT pi.pokemon_info_id, nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade, imagem, numero_pokemon 
-      FROM pokemon_info pi 
-      INNER JOIN pokemon_fraquezas pf ON pf.pokemon_info_id = pi.pokemon_info_id 
-      INNER JOIN fraquezas t ON t.fraquezas_id = pf.fraquezas_id 
-      WHERE fraqueza = $1 
+      `SELECT
+      p.pokemon_info_id,
+      p.nome,
+      p.descricao,
+      p.altura,
+      p.peso,
+      c.categoria,
+      string_agg(DISTINCT f.imagem_categoria, ', ') as img_categoria,
+      g.genero,
+      p.total,
+      p.hp,
+      p.ataque,
+      p.defesa,
+      p.especial_ataque,
+      p.especial_defesa,
+      p.velocidade,
+      p.imagem,
+      p.numero_pokemon,
+      string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
+      string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
+      string_agg(DISTINCT h.habilidade, ', ') as habilidades,
+      string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
+      string_agg(DISTINCT t.tipo, ', ') as tipos,
+      string_agg(DISTINCT f.imagem_tipagem, ', ') as img_tipo
+  FROM
+      pokemon_info p
+      INNER JOIN categorias c ON p.categoria_id = c.categoria_id
+      INNER JOIN generos g ON p.genero_id = g.genero_id
+      INNER JOIN pokemon_fraquezas pf ON p.pokemon_info_id = pf.pokemon_info_id
+      INNER JOIN fraquezas f ON pf.fraquezas_id = f.fraquezas_id
+      INNER JOIN pokemon_habilidades ph ON p.pokemon_info_id = ph.pokemon_info_id
+      INNER JOIN habilidades h ON ph.habilidade_id = h.habilidade_id
+      INNER JOIN pokemon_tipagem pt ON p.pokemon_info_id = pt.pokemon_info_id
+      INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
+    WHERE fraqueza = $1 
+    GROUP BY
+      p.pokemon_info_id,
+      p.nome,
+      p.descricao,
+      p.altura,
+      p.peso,
+      c.categoria,
+      g.genero,
+      p.total,
+      p.hp,
+      p.ataque,
+      p.defesa,
+      p.especial_ataque,
+      p.especial_defesa,
+      p.velocidade,
+      p.imagem,
+      p.numero_pokemon
       ORDER BY numero_pokemon`,
       [fraqueza]
     );
@@ -196,11 +297,58 @@ try {
   }
 
   const pokemon = await pool.query(
-    `SELECT pi.pokemon_info_id, nome, descricao, altura, peso, categoria_id, genero_id, total, hp, ataque, defesa, especial_ataque, especial_defesa, velocidade, imagem, numero_pokemon 
-    FROM pokemon_info pi 
-    INNER JOIN pokemon_tipagem pt ON pt.pokemon_info_id = pi.pokemon_info_id 
-    INNER JOIN tipagem t ON t.tipagem_id = pt.tipagem_id 
+    `SELECT
+    p.pokemon_info_id,
+    p.nome,
+    p.descricao,
+    p.altura,
+    p.peso,
+    c.categoria,
+    string_agg(DISTINCT f.imagem_categoria, ', ') as img_categoria,
+    g.genero,
+    p.total,
+    p.hp,
+    p.ataque,
+    p.defesa,
+    p.especial_ataque,
+    p.especial_defesa,
+    p.velocidade,
+    p.imagem,
+    p.numero_pokemon,
+    string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
+    string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
+    string_agg(DISTINCT h.habilidade, ', ') as habilidades,
+    string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
+    string_agg(DISTINCT t.tipo, ', ') as tipos,
+    string_agg(DISTINCT f.imagem_tipagem, ', ') as img_tipo
+FROM
+    pokemon_info p
+    INNER JOIN categorias c ON p.categoria_id = c.categoria_id
+    INNER JOIN generos g ON p.genero_id = g.genero_id
+    INNER JOIN pokemon_fraquezas pf ON p.pokemon_info_id = pf.pokemon_info_id
+    INNER JOIN fraquezas f ON pf.fraquezas_id = f.fraquezas_id
+    INNER JOIN pokemon_habilidades ph ON p.pokemon_info_id = ph.pokemon_info_id
+    INNER JOIN habilidades h ON ph.habilidade_id = h.habilidade_id
+    INNER JOIN pokemon_tipagem pt ON p.pokemon_info_id = pt.pokemon_info_id
+    INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
     WHERE tipo = $1 
+  GROUP BY
+    p.pokemon_info_id,
+    p.nome,
+    p.descricao,
+    p.altura,
+    p.peso,
+    c.categoria,
+    g.genero,
+    p.total,
+    p.hp,
+    p.ataque,
+    p.defesa,
+    p.especial_ataque,
+    p.especial_defesa,
+    p.velocidade,
+    p.imagem,
+    p.numero_pokemon
     ORDER BY numero_pokemon`,
     [tipagem]
   );
@@ -216,27 +364,59 @@ const MostrarPokemonPeloNome = async (req, res) => {
 
   try {
     const pokemon = await pool.query(`
-      SELECT
-        pokemon_info_id,
-        nome,
-        descricao,
-        altura,
-        peso,
-        categoria_id,
-        genero_id,
-        total,
-        hp,
-        ataque,
-        defesa,
-        especial_ataque,
-        especial_defesa,
-        velocidade,
-        imagem,
-        numero_pokemon
-      FROM
-        public.pokemon_info
+    SELECT
+    p.pokemon_info_id,
+    p.nome,
+    p.descricao,
+    p.altura,
+    p.peso,
+    c.categoria,
+    string_agg(DISTINCT f.imagem_categoria, ', ') as img_categoria,
+    g.genero,
+    p.total,
+    p.hp,
+    p.ataque,
+    p.defesa,
+    p.especial_ataque,
+    p.especial_defesa,
+    p.velocidade,
+    p.imagem,
+    p.numero_pokemon,
+    string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
+    string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
+    string_agg(DISTINCT h.habilidade, ', ') as habilidades,
+    string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
+    string_agg(DISTINCT t.tipo, ', ') as tipos,
+    string_agg(DISTINCT f.imagem_tipagem, ', ') as img_tipo
+FROM
+    pokemon_info p
+    INNER JOIN categorias c ON p.categoria_id = c.categoria_id
+    INNER JOIN generos g ON p.genero_id = g.genero_id
+    INNER JOIN pokemon_fraquezas pf ON p.pokemon_info_id = pf.pokemon_info_id
+    INNER JOIN fraquezas f ON pf.fraquezas_id = f.fraquezas_id
+    INNER JOIN pokemon_habilidades ph ON p.pokemon_info_id = ph.pokemon_info_id
+    INNER JOIN habilidades h ON ph.habilidade_id = h.habilidade_id
+    INNER JOIN pokemon_tipagem pt ON p.pokemon_info_id = pt.pokemon_info_id
+    INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
       WHERE
         nome ILIKE '%' || '${nome}' || '%'
+      GROUP BY
+        p.pokemon_info_id,
+        p.nome,
+        p.descricao,
+        p.altura,
+        p.peso,
+        c.categoria,
+        g.genero,
+        p.total,
+        p.hp,
+        p.ataque,
+        p.defesa,
+        p.especial_ataque,
+        p.especial_defesa,
+        p.velocidade,
+        p.imagem,
+        p.numero_pokemon
       ORDER BY
         numero_pokemon;
     `);
@@ -255,8 +435,58 @@ const MostrarPokemonPeloNome = async (req, res) => {
 const MostrarTodosPokemonsAleatorio = async (req, res) => {
   try{
 
-    const Pokemons = await pool.query(`SELECT *
-    FROM pokemon_info ORDER BY RANDOM()`)
+    const Pokemons = await pool.query(`SELECT
+    p.pokemon_info_id,
+    p.nome,
+    p.descricao,
+    p.altura,
+    p.peso,
+    c.categoria,
+    string_agg(DISTINCT f.imagem_categoria, ', ') as img_categoria,
+    g.genero,
+    p.total,
+    p.hp,
+    p.ataque,
+    p.defesa,
+    p.especial_ataque,
+    p.especial_defesa,
+    p.velocidade,
+    p.imagem,
+    p.numero_pokemon,
+    string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
+    string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
+    string_agg(DISTINCT h.habilidade, ', ') as habilidades,
+    string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
+    string_agg(DISTINCT t.tipo, ', ') as tipos,
+    string_agg(DISTINCT f.imagem_tipagem, ', ') as img_tipo
+FROM
+    pokemon_info p
+    INNER JOIN categorias c ON p.categoria_id = c.categoria_id
+    INNER JOIN generos g ON p.genero_id = g.genero_id
+    INNER JOIN pokemon_fraquezas pf ON p.pokemon_info_id = pf.pokemon_info_id
+    INNER JOIN fraquezas f ON pf.fraquezas_id = f.fraquezas_id
+    INNER JOIN pokemon_habilidades ph ON p.pokemon_info_id = ph.pokemon_info_id
+    INNER JOIN habilidades h ON ph.habilidade_id = h.habilidade_id
+    INNER JOIN pokemon_tipagem pt ON p.pokemon_info_id = pt.pokemon_info_id
+    INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
+  GROUP BY
+    p.pokemon_info_id,
+    p.nome,
+    p.descricao,
+    p.altura,
+    p.peso,
+    c.categoria,
+    g.genero,
+    p.total,
+    p.hp,
+    p.ataque,
+    p.defesa,
+    p.especial_ataque,
+    p.especial_defesa,
+    p.velocidade,
+    p.imagem,
+    p.numero_pokemon
+     ORDER BY RANDOM()`)
 
     if (Pokemons.length === 0) {
       return res.status(200).json({Mensagem: "Não há pokemons cadastrados.", status:400})
@@ -274,16 +504,17 @@ const MostrarTodosPokemonsAleatorio = async (req, res) => {
 // função de cadastrar pokemon
 const CadastrarCategoria = async (req, res) => {
   const {
-    categoria, imagem_categoria
+    categoria, imagem_categoria, descricao
   } = req.body
 
   try {
-    if (!categoria) {
+    if (!categoria || !imagem_categoria || descricao) {
       return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const nova_categoria = primeiraLetraMaiuscula(categoria)
     const nova_categoria_imagem = imagem_categoria.trim()
+    const nova_descricao = descricao.trim()
 
     let categoria_id;
     const verificaCategoria = await pool.query(
@@ -295,8 +526,8 @@ const CadastrarCategoria = async (req, res) => {
       categoria_id = verificaCategoria.rows[0].categoria_id;
     } else {
       const cadastroCategoria = await pool.query(
-        'INSERT INTO categorias (categoria, imagem_categoria) VALUES ($1, $2)',
-        [nova_categoria, nova_categoria_imagem]
+        'INSERT INTO categorias (categoria, imagem_categoria, descricao) VALUES ($1, $2, $3)',
+        [nova_categoria, nova_categoria_imagem, nova_descricao]
       );
       categoria_id = cadastroCategoria.rows[0].categoria_id;
     }
@@ -308,16 +539,17 @@ const CadastrarCategoria = async (req, res) => {
 
 const CadastrarFraqueza = async (req, res) => {
   const {
-    fraqueza, imagem_fraqueza
+    fraqueza, imagem_fraqueza, descricao
   } = req.body
 
   try {
-    if (!fraqueza) {
+    if (!fraqueza || !imagem_fraqueza || !descricao) {
       return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const nova_fraqueza = primeiraLetraMaiuscula(fraqueza)
     const nova_imagem_fraqueza = imagem_fraqueza.trim()
+    const nova_descricao = descricao.trim()
 
     let fraquezas_id;
       const verificaFraqueza = await pool.query(
@@ -329,8 +561,8 @@ const CadastrarFraqueza = async (req, res) => {
         fraquezas_id = verificaFraqueza.rows[0].fraquezas_id;
       } else {
         const cadastroFraqueza = await pool.query(
-          'INSERT INTO fraquezas (fraqueza, imagem_fraqueza) VALUES ($1)',
-          [nova_fraqueza, nova_imagem_fraqueza]
+          'INSERT INTO fraquezas (fraqueza, imagem_fraqueza) VALUES ($1, $2, $3)',
+          [nova_fraqueza, nova_imagem_fraqueza, nova_descricao]
         );
         fraquezas_id = cadastroFraqueza.rows[0].fraquezas_id;
     }
@@ -343,16 +575,17 @@ const CadastrarFraqueza = async (req, res) => {
 
 const CadastrarHabilidade = async (req, res) => {
   const {
-    habilidade, imagem_habilidade
+    habilidade, imagem_habilidade, descricao
   } = req.body
 
   try {
-    if (!habilidade) {
+    if (!habilidade || ! imagem_habilidade || descricao) {
       return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const nova_habilidade = primeiraLetraMaiuscula(habilidade)
     const nova_imagem_habilidade = imagem_habilidade.trim()
+    const nova_descricao = descricao.trim()
     let habilidade_id;
     const verificaHabilidade = await pool.query(
       'SELECT habilidade_id FROM habilidades WHERE habilidade = $1',
@@ -363,8 +596,8 @@ const CadastrarHabilidade = async (req, res) => {
       habilidade_id = verificaHabilidade.rows[0].habilidade_id;
     } else {
       const cadastroHabilidade = await pool.query(
-        'INSERT INTO habilidades (habilidade, imagem_habilidade) VALUES ($1)',
-        [nova_habilidade, nova_imagem_habilidade]
+        'INSERT INTO habilidades (habilidade, imagem_habilidade) VALUES ($1, $2, $3)',
+        [nova_habilidade, nova_imagem_habilidade, nova_descricao]
       );
       habilidade_id = cadastroHabilidade.rows[0].habilidade_id;
     }
@@ -377,16 +610,17 @@ const CadastrarHabilidade = async (req, res) => {
 
 const CadastrarTipagem = async (req, res) => {
   const {
-    tipagem, imagem_tipagem
+    tipagem, imagem_tipagem, descricao
   } = req.body
 
   try {
-    if (!tipagem) {
+    if (!tipagem || !imagem_tipagem || !descricao) {
       return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const nova_tipagem = primeiraLetraMaiuscula(tipagem)
     const nova_imagem_habilidade = imagem_tipagem.trim()
+    const nova_descricao = descricao.trim()
 
     let tipagem_id;
     const verificaTipagem = await pool.query(
@@ -398,8 +632,8 @@ const CadastrarTipagem = async (req, res) => {
       tipagem_id = verificaTipagem.rows[0].tipagem_id;
     } else {
       const cadastroTipagem = await pool.query(
-        'INSERT INTO tipagem (tipo) VALUES ($1) RETURNING tipagem_id',
-        [nova_tipagem, nova_imagem_habilidade]
+        'INSERT INTO tipagem (tipo) VALUES ($1, $2, $3)',
+        [nova_tipagem, nova_imagem_habilidade, nova_descricao]
       );
       tipagem_id = cadastroTipagem.rows[0].tipagem_id;
     }
