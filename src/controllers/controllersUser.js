@@ -61,30 +61,29 @@ const CadastrarUsuarioControllers = async (req, res) => {
 const Login = async (req, res) => {
     try {
         const {
-            nome, senha
-        } = req.body
-
-        if (!nome || !senha) {
-            return res.status(200).json({Mensagem: "Há campo(s) vazio(s).", status:400})
-        }
-
-        const novoUsuario = primeiraLetraMaiuscula(nome)
-        const novaSenha = senha.trim()
-        
-        const verificaUsuario = await pool.query("Select * from usuarios where nome = $1", [novoUsuario])
-        if (verificaUsuario.rows.length === 0) {
-            return res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
-        }
-        console.log(verificaUsuario)
-
-        const senhaValida = bcrypt.compareSync(novaSenha, verificaUsuario.rows.senha)
-        if (!senhaValida) {
-            return res.status(200).json({Mensagem: 'Usuario ou senha incorretos.', status:400})
-        }
-
-        const token = jwt.sign({ UsuarioId: verificaUsuario.rows[0].user_id }, process.env.SECRET_JWT, { expiresIn: '24h' });
-        res.cookie("token",token,{httpOnly:true})
-        return res.status(200).json({ token });
+            nome,
+            senha
+          } = req.body;
+          
+          if (!nome || !senha) {
+            return res.status(200).json({ Mensagem: "Há campo(s) vazio(s).", status: 400 });
+          }
+          
+          const novoUsuario = primeiraLetraMaiuscula(nome);
+          const novaSenha = senha.trim();
+          
+          const verificaUsuario = await pool.query("SELECT * FROM usuarios WHERE nome = $1", [novoUsuario]);
+          const senhaValida = bcrypt.compareSync(novaSenha, verificaUsuario.rows[0].senha);
+          
+          if (!senhaValida) {
+            return res.status(200).json({ Mensagem: 'Usuário ou senha incorretos.', status: 400 });
+          }
+          
+          const token = jwt.sign({ usuario: verificaUsuario.rows[0].nome }, 'a802c6ed36c616ef9df379ef94c38b0f', { expiresIn: 86400 });
+          
+          res.cookie("token", token, { httpOnly: true })
+            .status(200)
+            .json({ token });
     }
     catch (erro) {
         return res.status(500).json({Mensagem: erro.Mensagem})
@@ -116,12 +115,12 @@ const deletarToken = async (req, res) =>{
     const token = req.body.token || req.query.token || req.cookies.token || req.headers['x-access-token'];
 
     if(!token){
-       return res.status(200).json({Message:"Logout não autorizado.", status:400})
+       return res.status(200).json({Mensagem:"Logout não autorizado.", status:400})
     }
 
     res.cookie('token', null, {httpOnly:true})
     
-    return res.status(200).json({Message:"Você foi desconectado."})
+    return res.status(200).json({Mensagem:"Você foi desconectado."})
 
 }
 
@@ -153,7 +152,7 @@ const EncontrarUsuarioId = async (req, res) => {
       }
   
       catch (erro){
-          return res.status(500).json({Message: erro.Message})
+          return res.status(500).json({Mensagem: erro.Mensagem})
       }
 }
 
