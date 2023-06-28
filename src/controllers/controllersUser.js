@@ -79,36 +79,29 @@ const Login = async (req, res) => {
             return res.status(200).json({ Mensagem: 'Usuário ou senha incorretos.', status: 400 });
           }
           
+          const usuarioId = verificaUsuario.rows[0].user_id
+          const usuarioSenha = verificaUsuario.rows[0].senha
+
           const token = jwt.sign({ usuario: verificaUsuario.rows[0].nome }, 'a802c6ed36c616ef9df379ef94c38b0f', { expiresIn: 86400 });
           
           res.cookie("token",token,{httpOnly:true})
-          res.status(200).json({ token });
+          res.status(200).json({ token, usuarioId, novoUsuario, usuarioSenha});
     }
     catch (erro) {
         return res.status(500).json({Mensagem: erro.Mensagem})
     }
 }
 
-'a802c6ed36c616ef9df379ef94c38b0f'
-//
+
 const validarToken = async (req, res) => {
-    // req.body.token || req.query.token || req.cookies.token ||
-    // const token = req.headers
-    // ['x-access-token'];
-    // req.token = token
-    const { authorization } = req.headers;
+    const token =  req.body.token || req.query.token || req.cookies.token || req.headers['x-access-token'];
+    req.token = token
 
-    if (!authorization) {
-    return res.status(200).json({ Mensagem: "Não autorizado!", status: 400 });
+    if(!token){
+        return res.status(200).json({Message:"Token inválido.", status:400})
     }
 
-    const parts = authorization.split(" ");
-
-    if (parts.length !== 2 || parts[0] !== "Bearer") {
-    return res.status(200).json({ Mensagem: "Token inválido!", status: 400 });
-    }
-
-    const token = parts[1];
+    console.log(token)
     jwt.verify(token, 'a802c6ed36c616ef9df379ef94c38b0f', (err, decoded) =>{
         if(err){
             return res.status(200).json({Message:"Token inválido.", status:400})
@@ -120,23 +113,14 @@ const validarToken = async (req, res) => {
 }
 
 const deletarToken = async (req, res) => {
-    const { authorization } = req.headers;
+    const token = req.body.token || req.query.token || req.cookies.token || req.headers['x-access-token'];
 
-    if (!authorization) {
-        return res.status(401).json({ Mensagem: "Logout não autorizado.", status: 400 });
+    if(!token){
+       return res.status(200).json({Message:"Logout não autorizado.", status:400})
     }
-
-    const parts = authorization.split(" ");
-
-    if (parts.length !== 2 || parts[0] !== "Bearer") {
-        return res.status(401).json({ Mensagem: "Token inválido!", status: 400 });
-    }
-
-    const token = parts[1];
-    
     res.cookie('token', null, {httpOnly:true})
     
-    return res.status(200).json({ Mensagem: "Você foi desconectado." });
+    return res.status(200).json({Message:"Você foi desconectado."})
 };
 
 const EncontrarTodosUsuarios = async (req, res) => {
