@@ -1169,34 +1169,68 @@ const MostrarGradeEvolutivaPokemon = async (req, res) => {
     const nomeFormatado = primeiraLetraMaiuscula(nome).trim()
 
     const pokemon = await pool.query(`WITH RECURSIVE evolucao_pokemon AS (
-      SELECT pi.pokemon_info_id, pi.nome, ti.tipos, pe.evolucao_pokemon_info_id
-      FROM pokemon_info pi
-      LEFT JOIN (
-        SELECT pt.pokemon_info_id, STRING_AGG(t.tipo, ', ') AS tipos
-        FROM pokemon_tipagem pt
-        INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
-        GROUP BY pt.pokemon_info_id
-      ) ti ON pi.pokemon_info_id = ti.pokemon_info_id
-      LEFT JOIN pokemon_evolucoes pe ON pi.pokemon_info_id = pe.pokemon_info_id
-      WHERE pi.nome = $1
-    
+      SELECT
+        pi.pokemon_info_id,
+        pi.nome,
+        ti.tipos,
+        pe.evolucao_pokemon_info_id,
+        0 AS nivel
+      FROM
+        pokemon_info pi
+        LEFT JOIN (
+          SELECT
+            pt.pokemon_info_id,
+            STRING_AGG(t.tipo, ', ') AS tipos
+          FROM
+            pokemon_tipagem pt
+            INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
+          GROUP BY
+            pt.pokemon_info_id
+        ) ti ON pi.pokemon_info_id = ti.pokemon_info_id
+        LEFT JOIN pokemon_evolucoes pe ON pi.pokemon_info_id = pe.pokemon_info_id
+      WHERE
+        pi.pokemon_info_id = (
+          SELECT
+            pokemon_info_id
+          FROM
+            pokemon_info
+          WHERE
+            nome = $1
+        )
+      
       UNION ALL
-    
-      SELECT pi.pokemon_info_id, pi.nome, ti.tipos, pe.evolucao_pokemon_info_id
-      FROM pokemon_info pi
-      JOIN evolucao_pokemon ep ON pi.pokemon_info_id = ep.evolucao_pokemon_info_id
-      LEFT JOIN (
-        SELECT pt.pokemon_info_id, STRING_AGG(t.tipo, ', ') AS tipos
-        FROM pokemon_tipagem pt
-        INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
-        GROUP BY pt.pokemon_info_id
-      ) ti ON pi.pokemon_info_id = ti.pokemon_info_id
-      LEFT JOIN pokemon_evolucoes pe ON pi.pokemon_info_id = pe.pokemon_info_id
-      WHERE pi.pokemon_info_id IS NOT NULL
+      
+      SELECT
+        pi.pokemon_info_id,
+        pi.nome,
+        ti.tipos,
+        pe.evolucao_pokemon_info_id,
+        ep.nivel + 1
+      FROM
+        pokemon_info pi
+        JOIN evolucao_pokemon ep ON pi.pokemon_info_id = ep.evolucao_pokemon_info_id
+        LEFT JOIN (
+          SELECT
+            pt.pokemon_info_id,
+            STRING_AGG(t.tipo, ', ') AS tipos
+          FROM
+            pokemon_tipagem pt
+            INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
+          GROUP BY
+            pt.pokemon_info_id
+        ) ti ON pi.pokemon_info_id = ti.pokemon_info_id
+        LEFT JOIN pokemon_evolucoes pe ON pi.pokemon_info_id = pe.pokemon_info_id
     )
-    SELECT ep.pokemon_info_id, ep.nome, ep.tipos
-    FROM evolucao_pokemon ep
-    ORDER BY ep.pokemon_info_id ASC;
+    SELECT DISTINCT
+      ep.pokemon_info_id,
+      ep.nome,
+      ep.tipos,
+      ep.nivel
+    FROM
+      evolucao_pokemon ep
+    ORDER BY
+      ep.nivel ASC;
+    
     `, [nomeFormatado])
     
       
