@@ -14,46 +14,46 @@ const pool = new Pool({
       await client.query(`
       CREATE TABLE IF NOT EXISTS categorias (
         categoria_id SERIAL PRIMARY KEY,
-        categoria VARCHAR,
-        imagem_categoria VARCHAR,
-        descricao VARCHAR
+        categoria VARCHAR(255)
       );
       
       CREATE TABLE IF NOT EXISTS fraquezas (
         fraquezas_id SERIAL PRIMARY KEY,
-        fraqueza VARCHAR,
-        imagem_fraqueza VARCHAR,
-        descricao VARCHAR
+        fraqueza VARCHAR(255),
+        imagem_fraqueza VARCHAR(255)
       );
       
       CREATE TABLE IF NOT EXISTS generos (
         genero_id SERIAL PRIMARY KEY,
-        genero VARCHAR
+        genero VARCHAR(255)
       );
       
       CREATE TABLE IF NOT EXISTS habilidades (
         habilidade_id SERIAL PRIMARY KEY,
-        habilidade VARCHAR,
-        imagem_habilidade VARCHAR,
-        descricao VARCHAR
+        habilidade VARCHAR(255),
+        descricao VARCHAR(255)
       );
       
       CREATE TABLE IF NOT EXISTS pokemon_fraquezas (
         pokemon_fraqueza_id SERIAL PRIMARY KEY,
         pokemon_info_id INTEGER,
-        fraquezas_id INTEGER
+        fraquezas_id INTEGER,
+        FOREIGN KEY (pokemon_info_id) REFERENCES pokemon_info(pokemon_info_id),
+        FOREIGN KEY (fraquezas_id) REFERENCES fraquezas(fraquezas_id)
       );
       
       CREATE TABLE IF NOT EXISTS pokemon_habilidades (
         pokemon_habilidades_id SERIAL PRIMARY KEY,
         pokemon_info_id INTEGER,
-        habilidade_id INTEGER
+        habilidade_id INTEGER,
+        FOREIGN KEY (pokemon_info_id) REFERENCES pokemon_info(pokemon_info_id),
+        FOREIGN KEY (habilidade_id) REFERENCES habilidades(habilidade_id)
       );
       
       CREATE TABLE IF NOT EXISTS pokemon_info (
         pokemon_info_id SERIAL PRIMARY KEY,
-        nome VARCHAR,
-        descricao VARCHAR,
+        nome VARCHAR(255),
+        descricao VARCHAR(255),
         altura DOUBLE PRECISION,
         peso DOUBLE PRECISION,
         categoria_id INTEGER,
@@ -65,32 +65,45 @@ const pool = new Pool({
         especial_ataque INTEGER,
         especial_defesa INTEGER,
         velocidade INTEGER,
-        imagem VARCHAR,
-        numero_pokemon INTEGER
+        imagem VARCHAR(255),
+        numero_pokemon INTEGER,
+        FOREIGN KEY (categoria_id) REFERENCES categorias(categoria_id),
+        FOREIGN KEY (genero_id) REFERENCES generos(genero_id)
       );
       
       CREATE TABLE IF NOT EXISTS pokemon_tipagem (
         pokemon_tipagem_id SERIAL PRIMARY KEY,
         pokemon_info_id INTEGER,
-        tipagem_id INTEGER
+        tipagem_id INTEGER,
+        FOREIGN KEY (pokemon_info_id) REFERENCES pokemon_info(pokemon_info_id),
+        FOREIGN KEY (tipagem_id) REFERENCES tipagem(tipagem_id)
       );
       
       CREATE TABLE IF NOT EXISTS tipagem (
         tipagem_id SERIAL PRIMARY KEY,
-        tipo VARCHAR,
-        imagem_tipagem VARCHAR,
-        descricao VARCHAR
+        tipo VARCHAR(255),
+        imagem_tipagem VARCHAR(255)
       );
       
       CREATE TABLE IF NOT EXISTS administradores (
         administrador_id SERIAL PRIMARY KEY,
-        usuario_id INTEGER
+        usuario_id INTEGER,
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(user_id)
       );
       
       CREATE TABLE IF NOT EXISTS usuarios (
         user_id SERIAL PRIMARY KEY,
-        nome VARCHAR,
-        senha VARCHAR
+        nome VARCHAR(255),
+        senha VARCHAR(255)
+      );
+      
+      CREATE TABLE IF NOT EXISTS pokemon_evolucoes (
+        evolucao_id SERIAL PRIMARY KEY,
+        pokemon_info_id INTEGER,
+        evolucao_pokemon_info_id INTEGER,
+        nivel INTEGER,
+        FOREIGN KEY (pokemon_info_id) REFERENCES pokemon_info(pokemon_info_id),
+        FOREIGN KEY (evolucao_pokemon_info_id) REFERENCES pokemon_info(pokemon_info_id)
       );
       `);
       client.release();
