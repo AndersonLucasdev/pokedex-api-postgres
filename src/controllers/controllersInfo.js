@@ -1064,18 +1064,18 @@ const EditarCategoria = async (req, res) => {
       return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
-    const tratamentoCategoria = primeiraLetraMaiuscula(categoria)
-
+    const tratamentoNomeCategoria = primeiraLetraMaiuscula(categoria)
+    
     let categoria_id;
     const verificaCategoria = await pool.query(
       'SELECT categoria_id FROM categorias WHERE categoria = $1',
-      [tratamentoCategoria]
+      [tratamentoNomeCategoria]
     );
     // o id da categoria é pegada e comparada
     categoria_id = verificaCategoria.rows[0].categoria_id;
-
-    const TratamentoNovoNomeCategoria = primeiraLetraMaiuscula(novoNomeCategoria)
+    const tratamentoNovoNomeCategoria = primeiraLetraMaiuscula(novoNomeCategoria)
     
+    await pool.query('UPDATE categorias SET categoria = $1 WHERE categoria_id = $2', [tratamentoNovoNomeCategoria, categoria_id]);
 
       return res.status(200).json({Mensagem: 'Categoria editada com sucesso.' });
   } catch (erro){
@@ -1083,161 +1083,94 @@ const EditarCategoria = async (req, res) => {
   }
 }
 
-
-
-
-// const MostrarGradeEvolutivaPokemon = async (req, res) => {
-//   try {
-//     const pokemon = await pool.query(`
-//       WITH RECURSIVE EvolutionChain AS (
-//         SELECT evolucao_id
-//         FROM pokemon_evolucoes
-//         WHERE pokemon_info_id = $1
-//         UNION ALL
-//         SELECT pe.evolucao_id
-//         FROM pokemon_evolucoes pe
-//         JOIN EvolutionChain ec ON pe.pokemon_info_id = ec.evolucao_id
-//       )
-//       SELECT * FROM EvolutionChain;
-//     `, [req.params.id]);
-  
-//     res.status(200).json(pokemon);
-//   } 
-//   catch (erro) {
-//     return res.status(500).json({ Message: erro.message });
+// const EditarFraqueza = async (req, res) => {
+//   const {
+//     fraqueza, novaFraqueza, 
 //   }
 // }
 
-
-// const CadastrarGradeEvolutivaPokemon = async (req, res) => {
-//   const { nomePokemon, nomeEvolucaoPokemon, nivelEvolucao } = req.body;
-
-// // Formatar os campos
-// const nomePokemonFormatado = primeiraLetraMaiuscula(nomePokemon);
-// const nomeEvolucaoPokemonFormatado = primeiraLetraMaiuscula(nomeEvolucaoPokemon);
-// const nivelEvolucaoFormatado = String(nivelEvolucao).trim();
-
-// try {
-//   if (!nomePokemonFormatado || !nomeEvolucaoPokemonFormatado || !nivelEvolucaoFormatado) {
-//     return res.status(400).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
-//   }
-
-//   // Verifica pokemon
-//   let pokemon_id;
-//   const verificaPokemon = await pool.query(
-//     'SELECT pokemon_info_id FROM pokemon_info WHERE nome = $1',
-//     [nomePokemonFormatado]
-//   );
-//   pokemon_id = verificaPokemon.rows[0].pokemon_info_id;
-
-//   // Verifica evolucao pokemon
-//   let evolucao_pokemon_info_id;
-//   const verificaEvolucaoPokemon = await pool.query(
-//     'SELECT pokemon_info_id FROM pokemon_info WHERE nome = $1',
-//     [nomeEvolucaoPokemonFormatado]
-//   );
-//   evolucao_pokemon_info_id = verificaEvolucaoPokemon.rows[0].pokemon_info_id;
-
-//   // Inserindo nas tabelas
-//   const CadastroPokemon = await pool.query(
-//     `INSERT INTO pokemon_evolucoes (
-//       pokemon_info_id,
-//       evolucao_pokemon_info_id,
-//       nivel
-//     ) VALUES ($1, $2, $3) RETURNING pokemon_info_id`,
-//     [
-//       pokemon_id,
-//       evolucao_pokemon_info_id,
-//       nivelEvolucaoFormatado
-//     ]
-//   );
-
-//   const pokemon_info_id = CadastroPokemon.rows[0].pokemon_info_id;
-
-//   return res.status(200).json({ Mensagem: 'Grade do cadastrado com sucesso.' });
-// } catch (erro) {
-//   return res.status(500).json({ Mensagem: 'Erro ao cadastrar pokemon.', erro });
-// }
-// }
 
 const MostrarGradeEvolutivaPokemon = async (req, res) => {
-  const {
-    nome
-  } = req.body
+  const { nome, numeroPokemon } = req.body;
+
   try {
+    const numeroPokemonFormatado = String(numeroPokemon).trim();
+  
+    let pokemon_id;
+    const verificaNumeroPokemon = await pool.query(
+      `SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1`,
+      [numeroPokemonFormatado]
+    );
+    pokemon_id = verificaNumeroPokemon.rows[0].pokemon_info_id;
+  
+    await pool.query('BEGIN');
 
-    const nomeFormatado = primeiraLetraMaiuscula(nome).trim()
+  const consulta = `
+    CREATE OR REPLACE FUNCTION public.get_familia_evolucao(IN pokemon_id integer)
+    RETURNS integer[]
+    LANGUAGE 'plpgsql'
+    VOLATILE
+    PARALLEL UNSAFE
+    COST 100
+  AS $BODY$
+  DECLARE 
+      -- variable declaration  
+      id_inicial int;  
+      id_familia int[]; 
+      current_pokemon_id int := pokemon_id; -- Declare uma nova variável para armazenar o valor atual de pokemon_id
 
-    const pokemon = await pool.query(`WITH RECURSIVE evolucao_pokemon AS (
-      SELECT
-        pi.pokemon_info_id,
-        pi.nome,
-        ti.tipos,
-        pe.evolucao_pokemon_info_id,
-        0 AS nivel
-      FROM
-        pokemon_info pi
-        LEFT JOIN (
-          SELECT
-            pt.pokemon_info_id,
-            STRING_AGG(t.tipo, ', ') AS tipos
-          FROM
-            pokemon_tipagem pt
-            INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
-          GROUP BY
-            pt.pokemon_info_id
-        ) ti ON pi.pokemon_info_id = ti.pokemon_info_id
-        LEFT JOIN pokemon_evolucoes pe ON pi.pokemon_info_id = pe.pokemon_info_id
-      WHERE
-        pi.pokemon_info_id = (
-          SELECT
-            pokemon_info_id
-          FROM
-            pokemon_info
-          WHERE
-            nome = $1
-        )
+  BEGIN
+      id_inicial := (SELECT pokemon_info_id FROM pokemon_evolucoes WHERE evolucao_pokemon_info_id = pokemon_id LIMIT 1);
       
-      UNION ALL
+      WHILE id_inicial IS NOT NULL LOOP
+          current_pokemon_id := id_inicial;
+          id_inicial := (SELECT pokemon_info_id FROM pokemon_evolucoes WHERE evolucao_pokemon_info_id = current_pokemon_id );
+      END LOOP;
       
-      SELECT
-        pi.pokemon_info_id,
-        pi.nome,
-        ti.tipos,
-        pe.evolucao_pokemon_info_id,
-        ep.nivel + 1
-      FROM
-        pokemon_info pi
-        JOIN evolucao_pokemon ep ON pi.pokemon_info_id = ep.evolucao_pokemon_info_id
-        LEFT JOIN (
-          SELECT
-            pt.pokemon_info_id,
-            STRING_AGG(t.tipo, ', ') AS tipos
-          FROM
-            pokemon_tipagem pt
-            INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
-          GROUP BY
-            pt.pokemon_info_id
-        ) ti ON pi.pokemon_info_id = ti.pokemon_info_id
-        LEFT JOIN pokemon_evolucoes pe ON pi.pokemon_info_id = pe.pokemon_info_id
+      WHILE current_pokemon_id IS NOT NULL LOOP
+          id_familia := array_append(id_familia, current_pokemon_id);
+      
+          FOR rept IN 1..(SELECT COUNT(*) FROM pokemon_evolucoes WHERE evolucao_pokemon_info_id = current_pokemon_id OR pokemon_info_id = current_pokemon_id) LOOP
+              id_familia := ARRAY_CAT(id_familia, ARRAY(SELECT evolucao_pokemon_info_id FROM pokemon_evolucoes WHERE pokemon_info_id = current_pokemon_id OR evolucao_pokemon_info_id = current_pokemon_id));
+          END LOOP;
+        
+          current_pokemon_id := (SELECT evolucao_pokemon_info_id FROM pokemon_evolucoes WHERE pokemon_info_id = current_pokemon_id LIMIT 1);
+      END LOOP;    
+    
+    FOR rept IN 1..ARRAY_LENGTH(id_familia, 1) LOOP
+          id_familia := ARRAY_CAT(id_familia, ARRAY(SELECT evolucao_pokemon_info_id FROM pokemon_evolucoes WHERE pokemon_info_id = rept));
+      END LOOP;
+    
+        RETURN ARRAY(SELECT DISTINCT unnest(id_familia));
+    END;
+    $BODY$;
+  `;
+
+  // Executar a primeira consulta na transação
+  await pool.query(consulta);
+
+  const consultaPrincipal = `
+    WITH familia AS (
+        SELECT unnest(get_familia_evolucao($1)) AS pokemon_id
     )
-    SELECT DISTINCT
-      ep.pokemon_info_id,
-      ep.nome,
-      ep.tipos,
-      ep.nivel
-    FROM
-      evolucao_pokemon ep
-    ORDER BY
-      ep.nivel ASC;
-    
-    `, [nomeFormatado])
-    
-      
+    SELECT pi.imagem, pi.nome, pi.numero_pokemon, STRING_AGG(DISTINCT t.tipo, ', ') AS tipos
+    FROM pokemon_info pi
+    INNER JOIN pokemon_tipagem pt ON pt.pokemon_info_id = pi.pokemon_info_id
+    INNER JOIN tipagem t ON t.tipagem_id = pt.tipagem_id
+    INNER JOIN familia ON pi.pokemon_info_id = familia.pokemon_id
+    GROUP BY pi.imagem, pi.nome, pi.numero_pokemon
+    ORDER BY pi.estagio_evolucao;
+  `;
 
-    res.status(200).json(pokemon.rows);
-  } 
-  catch (erro) {
+  // Executar a segunda consulta na transação
+  const pokemon = await pool.query(consultaPrincipal, [pokemon_id]);
+
+  // Comitar a transação
+  await pool.query('COMMIT');
+
+  res.status(200).json(pokemon.rows);
+    
+  } catch (erro) {
     return res.status(500).json({ Mensagem: erro.message });
   }
 }
