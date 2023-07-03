@@ -1090,6 +1090,8 @@ const EditarCategoria = async (req, res) => {
 // }
 
 
+
+// grade evolutiva
 const MostrarGradeEvolutivaPokemon = async (req, res) => {
   const { nome, numeroPokemon } = req.body;
 
@@ -1177,51 +1179,46 @@ const MostrarGradeEvolutivaPokemon = async (req, res) => {
 
 
 const CadastrarGradeEvolutivaPokemon = async (req, res) => {
-  const { nomePokemon, nomeEvolucaoPokemon, nivelEvolucao } = req.body;
+  const { nomePokemon, numeroPokemon, nomeEvolucaoPokemon, numeroPokemonEvolucao} = req.body;
 
   // Formatar os campos
-  const nomePokemonFormatado = primeiraLetraMaiuscula(nomePokemon);
-  const nomeEvolucaoPokemonFormatado = primeiraLetraMaiuscula(nomeEvolucaoPokemon);
-  const nivelEvolucaoFormatado = String(nivelEvolucao).trim();
-
   try {
-    if (!nomePokemonFormatado || !nomeEvolucaoPokemonFormatado || !nivelEvolucaoFormatado) {
+
+    
+    if (!nomePokemon || !numeroPokemon || !nomeEvolucaoPokemon || !numeroPokemonEvolucao) {
       return res.status(400).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
-    // Verificar pokemon
-    const verificaPokemon = await pool.query(
-      'SELECT pokemon_info_id FROM pokemon_info WHERE nome = $1',
-      [nomePokemonFormatado]
-    );
-    const pokemon_id = verificaPokemon.rows[0]?.pokemon_info_id;
+    const numeroPokemonFormatado = String(numeroPokemon).trim();
+    const numeroPokemonEvolucaoFormatado = String(numeroPokemonEvolucao).trim();
 
-    if (!pokemon_id) {
-      return res.status(400).json({ Mensagem: 'Pokemon não encontrado.', status: 400 });
-    }
+    // Verificar pokemon
+    let pokemon_id;
+    const verificaNumeroPokemon = await pool.query(
+      `SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1`,
+      [numeroPokemonFormatado]
+    );
+    pokemon_id = verificaNumeroPokemon.rows[0].pokemon_info_id;
+
 
     // Verificar evolucao pokemon
-    const verificaEvolucaoPokemon = await pool.query(
-      'SELECT pokemon_info_id FROM pokemon_info WHERE nome = $1',
-      [nomeEvolucaoPokemonFormatado]
+    let pokemon_id_evolucao;
+    const verificaNumeroPokemonEvolucao = await pool.query(
+      `SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1`,
+      [numeroPokemonEvolucaoFormatado]
     );
-    const evolucao_pokemon_info_id = verificaEvolucaoPokemon.rows[0]?.pokemon_info_id;
+    pokemon_id_evolucao = verificaNumeroPokemonEvolucao.rows[0].pokemon_info_id;
 
-    if (!evolucao_pokemon_info_id) {
-      return res.status(400).json({ Mensagem: 'Evolução do Pokemon não encontrada.', status: 400 });
-    }
 
     // Inserir nas tabelas
     const cadastroPokemon = await pool.query(
       `INSERT INTO pokemon_evolucoes (
         pokemon_info_id,
-        evolucao_pokemon_info_id,
-        nivel
+        evolucao_pokemon_info_id
       ) VALUES ($1, $2, $3) RETURNING pokemon_info_id`,
       [
         pokemon_id,
-        evolucao_pokemon_info_id,
-        nivelEvolucaoFormatado
+        evolucao_pokemon_info_id
       ]
     );
 
