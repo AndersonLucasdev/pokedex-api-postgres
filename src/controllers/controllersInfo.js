@@ -1152,16 +1152,46 @@ const MostrarGradeEvolutivaPokemon = async (req, res) => {
   await pool.query(consulta);
 
   const consultaPrincipal = `
-    WITH familia AS (
-        SELECT unnest(get_familia_evolucao($1)) AS pokemon_id
-    )
-    SELECT pi.imagem, pi.nome, pi.numero_pokemon, STRING_AGG(DISTINCT t.tipo, ', ') AS tipos
-    FROM pokemon_info pi
+  WITH familia AS (
+    SELECT unnest(get_familia_evolucao($1)) AS pokemon_id
+  ),
+  menor_id AS (
+    SELECT MIN(pokemon_id) AS menor_id FROM familia
+  )
+  SELECT 
+    pi.imagem, 
+    pi.nome, 
+    pi.numero_pokemon, 
+    STRING_AGG(DISTINCT t.tipo, ', ') AS tipos,
+    pe.nivel
+  FROM 
+    pokemon_info pi
     INNER JOIN pokemon_tipagem pt ON pt.pokemon_info_id = pi.pokemon_info_id
     INNER JOIN tipagem t ON t.tipagem_id = pt.tipagem_id
     INNER JOIN familia ON pi.pokemon_info_id = familia.pokemon_id
-    GROUP BY pi.imagem, pi.nome, pi.numero_pokemon
-    ORDER BY pi.estagio_evolucao;
+    LEFT JOIN pokemon_evolucoes pe ON pe.evolucao_pokemon_info_id = pi.pokemon_info_id
+  WHERE 
+    (pe.nivel IS NULL) AND pi.pokemon_info_id = (SELECT menor_id FROM menor_id)
+  GROUP BY 
+    pi.imagem, pi.nome, pi.numero_pokemon, pe.nivel;
+  
+  WITH familia AS (
+    SELECT unnest(get_familia_evolucao($1)) AS pokemon_id
+  )
+  SELECT 
+    pi.imagem, 
+    pi.nome, 
+    pi.numero_pokemon, 
+    STRING_AGG(DISTINCT t.tipo, ', ') AS tipos,
+    pe.nivel
+  FROM 
+    pokemon_info pi
+    INNER JOIN pokemon_tipagem pt ON pt.pokemon_info_id = pi.pokemon_info_id
+    INNER JOIN tipagem t ON t.tipagem_id = pt.tipagem_id
+    INNER JOIN familia ON pi.pokemon_info_id = familia.pokemon_id
+    LEFT JOIN pokemon_evolucoes pe ON pe.evolucao_pokemon_info_id = pi.pokemon_info_id
+  GROUP BY 
+    pi.imagem, pi.nome, pi.numero_pokemon, pe.nivel
   `;
 
   // Executar a segunda consulta na transação
@@ -1179,20 +1209,20 @@ const MostrarGradeEvolutivaPokemon = async (req, res) => {
 
 
 const CadastrarGradeEvolutivaPokemon = async (req, res) => {
-  const { nomePokemon, numeroPokemon, nomeEvolucaoPokemon, numeroPokemonEvolucao} = req.body;
+  const { nomePokemon, numeroPokemon, nomeEvolucaoPokemon, numeroPokemonEvolucao, nivelEvolucao} = req.body;
 
   // Formatar os campos
   try {
 
     
-    if (!nomePokemon || !numeroPokemon || !nomeEvolucaoPokemon || !numeroPokemonEvolucao) {
+    if (!nomePokemon || !numeroPokemon || !nomeEvolucaoPokemon || !numeroPokemonEvolucao || !nivelEvolucao) {
       return res.status(400).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
     }
 
     const numeroPokemonFormatado = String(numeroPokemon).trim();
     const numeroPokemonEvolucaoFormatado = String(numeroPokemonEvolucao).trim();
-
-    // Verificar pokemon
+    const nivelEvolucaoFormatado = nivelEvolucao.trim()
+    // Verificar pokemon  
     let pokemon_id;
     const verificaNumeroPokemon = await pool.query(
       `SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1`,
@@ -1200,7 +1230,7 @@ const CadastrarGradeEvolutivaPokemon = async (req, res) => {
     );
     pokemon_id = verificaNumeroPokemon.rows[0].pokemon_info_id;
 
-
+      
     // Verificar evolucao pokemon
     let pokemon_id_evolucao;
     const verificaNumeroPokemonEvolucao = await pool.query(
@@ -1214,11 +1244,13 @@ const CadastrarGradeEvolutivaPokemon = async (req, res) => {
     const cadastroPokemon = await pool.query(
       `INSERT INTO pokemon_evolucoes (
         pokemon_info_id,
-        evolucao_pokemon_info_id
+        evolucao_pokemon_info_id,
+        nivel
       ) VALUES ($1, $2, $3) RETURNING pokemon_info_id`,
       [
         pokemon_id,
-        evolucao_pokemon_info_id
+        evolucao_pokemon_info_id,
+        nivelEvolucaoFormatado
       ]
     );
 
