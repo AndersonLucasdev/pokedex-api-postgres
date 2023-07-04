@@ -630,9 +630,9 @@ const CadastrarTipagem = async (req, res) => {
       tipagem_id = cadastroTipagem.rows[0].tipagem_id;
     }
 
-    return res.status(200).json({Mensagem: 'Tipo cadastrado com sucesso.' });
+    return res.status(200).json({Mensagem: 'Tipagem cadastrado com sucesso.' });
   } catch (erro){
-    return res.status(500).json({ Mensagem: 'Erro ao cadastrar tipo.', erro });
+    return res.status(500).json({ Mensagem: 'Erro ao cadastrar tipagem.', erro });
   }
 }
 
@@ -1017,7 +1017,7 @@ const ExcluirTipagem = async (req, res) => {
     }
 
   } catch (erro){
-    return res.status(500).json({ Mensagem: 'Erro ao excluir categoria.', erro });
+    return res.status(500).json({ Mensagem: 'Erro ao excluir tipagem.', erro });
   }
 }
 
@@ -1067,14 +1067,13 @@ const EditarCategoria = async (req, res) => {
     const tratamentoNomeCategoria = primeiraLetraMaiuscula(categoria)
     
     let categoria_id;
-    const verificaCategoria = await pool.query(
-      'SELECT categoria_id FROM categorias WHERE categoria = $1',
-      [tratamentoNomeCategoria]
-    );
+    const verificaCategoria = await pool.query('Select * from categorias WHERE categoria = $1', [tratamentoNomeCategoria])
     // o id da categoria é pegada e comparada
     categoria_id = verificaCategoria.rows[0].categoria_id;
+    res.status(200).json(verificaCategoria.rows[0])
+
+
     const tratamentoNovoNomeCategoria = primeiraLetraMaiuscula(novoNomeCategoria)
-    
     await pool.query('UPDATE categorias SET categoria = $1 WHERE categoria_id = $2', [tratamentoNovoNomeCategoria, categoria_id]);
 
       return res.status(200).json({Mensagem: 'Categoria editada com sucesso.' });
@@ -1083,13 +1082,97 @@ const EditarCategoria = async (req, res) => {
   }
 }
 
-// const EditarFraqueza = async (req, res) => {
-//   const {
-//     fraqueza, novaFraqueza, 
-//   }
-// }
+const EditarFraqueza = async (req, res) => {
+  const {
+    fraqueza, novoNomeFraqueza, NovaImagemFraqueza
+  } = req.body
+
+  try {
+    if (!fraqueza) {
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    }
+
+    const tratamentoNomeFraqueza = primeiraLetraMaiuscula(fraqueza)
+    
+    let fraqueza_id;
+    const verificaFraqueza = await pool.query('Select * from fraquezas WHERE fraqueza = $1', [tratamentoNomeFraqueza])
+    // o id da categoria é pegada e comparada
+    fraqueza_id = verificaFraqueza.rows[0].fraqueza_id;
+    res.status(200).json(verificaFraqueza.rows[0])
 
 
+    const tratamentoNovoNomeFraqueza = primeiraLetraMaiuscula(novoNomeFraqueza)
+    const tratamentoNovaImgFraqueza = NovaImagemFraqueza.trim()
+
+    await pool.query('UPDATE fraquezas SET fraqueza = $1, imagem_fraqueza = $2 WHERE categoria_id = $3', [tratamentoNovoNomeFraqueza, tratamentoNovaImgFraqueza, fraqueza_id]);
+
+      return res.status(200).json({Mensagem: 'Fraqueza editada com sucesso.' });
+  } catch (erro){
+    res.status(500).json({ Mensagem: 'Erro ao editar fraqueza.', erro });
+  }
+}
+
+const EditarHabilidade = async (req, res) => {
+  const {
+    habilidade, novoNomeHabildade, novaDescricao 
+  } = req.body
+
+  try {
+    if (!habilidade) {
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    }
+
+    const tratamentoNomeHabilidade = primeiraLetraMaiuscula(habilidade)
+    
+    let habilidade_id;
+    const verificaHabilidade = await pool.query('Select * from habilidades WHERE habilidade = $1', [tratamentoNomeHabilidade])
+    // o id da categoria é pegada e comparada
+    habilidade_id = verificaHabilidade.rows[0].habilidade_id;
+    res.status(200).json(verificaHabilidade.rows[0])
+
+
+    const tratamentoNovoNomeHabilidade = primeiraLetraMaiuscula(novoNomeHabildade)
+    const tratamentoNovaDescricao = capitalizarEPontuar(novaDescricao).trim()
+
+    await pool.query('UPDATE habilidades SET habilidade = $1, descricao = $2 WHERE habilidade_id = $3', [tratamentoNovoNomeHabilidade, tratamentoNovaDescricao, habilidade_id]);
+
+      return res.status(200).json({Mensagem: 'Habilidade editada com sucesso.' });
+  } catch (erro){
+    res.status(500).json({ Mensagem: 'Erro ao editar habilidade.', erro });
+  }
+}
+
+const EditarTipagem = async (req, res) => {
+  const {
+    tipo, NovoNomeTipo, NovaImagemTipagem
+  } = req.body
+
+  try {
+    if (!tipo) {
+      return res.status(200).json({Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    }
+
+    const tratamentoNomeTipo = primeiraLetraMaiuscula(tipo)
+    
+    let tipo_id;
+    const verificaTipo = await pool.query('Select * from tipagem WHERE tipo = $1', [tratamentoNomeTipo])
+    // o id da categoria é pegada e comparada
+    tipo_id = verificaTipo.rows[0].tipagem_id;
+    res.status(200).json(verificaTipo.rows[0])
+
+
+    const tratamentoNovoNomeTipo = primeiraLetraMaiuscula(NovoNomeTipo)
+    const tratamentoNovaImgTipagem = NovaImagemTipagem.trim()
+
+    await pool.query('UPDATE tipagem SET tipo = $1, imagem_tipagem = $2 WHERE tipagem_id = $3', [tratamentoNovoNomeTipo, tratamentoNovaImgTipagem, tipagem_id]);
+
+      return res.status(200).json({Mensagem: 'Tipagem editada com sucesso.' });
+
+
+  } catch (erro){
+    res.status(500).json({ Mensagem: 'Erro ao editar tipagem.', erro });
+  }
+}
 
 // grade evolutiva
 const MostrarGradeEvolutivaPokemon = async (req, res) => {
@@ -1273,6 +1356,7 @@ const ExcluirGradeEvolutivaPokemon = async (req, res) => {
 }
 
 
+// funções gerais
 function primeiraLetraMaiuscula(texto) {
   return String(texto)
     .trim() // Remove espaços em branco no início e no final da string
@@ -1282,7 +1366,12 @@ function primeiraLetraMaiuscula(texto) {
 
 }
 
-
+function capitalizarEPontuar(str) {
+  const capitalizada = str.charAt(0).toUpperCase() + str.slice(1); // Capitaliza a primeira letra
+  const comPonto = capitalizada.endsWith('.') ? capitalizada : capitalizada + '.'; // Adiciona um ponto final se já não houver um
+  
+  return String(comPonto);
+}
 
 
 export {
