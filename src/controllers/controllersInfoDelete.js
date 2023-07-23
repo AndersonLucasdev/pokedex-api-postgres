@@ -1,6 +1,7 @@
 import pool from "../database/db.js"
 import primeiraLetraMaiuscula from './controllersInfo.js'
 
+
 // funções de exclusão
 const ExcluirCategoria = async (req, res) => {
     const {
