@@ -157,7 +157,6 @@ const MostrarPokemonPeloID = async (req, res) => {
       p.altura,
       p.peso,
       c.categoria,
-      string_agg(DISTINCT c.imagem_categoria, ', ') as img_categoria,
       g.genero,
       p.total,
       p.hp,
@@ -168,10 +167,11 @@ const MostrarPokemonPeloID = async (req, res) => {
       p.velocidade,
       p.imagem,
       p.numero_pokemon,
+      p.estagio_evolucao
       string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
       string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
       string_agg(DISTINCT h.habilidade, ', ') as habilidades,
-      string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
+      string_agg(DISTINCT h.descricao, ', ') as descricoes_habilidade,
       string_agg(DISTINCT t.tipo, ', ') as tipos,
       string_agg(DISTINCT t.imagem_tipagem, ', ') as img_tipo
   FROM
@@ -229,7 +229,6 @@ const MostrarTodosPokemonsFraquezas = async (req, res) => {
       p.altura,
       p.peso,
       c.categoria,
-      string_agg(DISTINCT c.imagem_categoria, ', ') as img_categoria,
       g.genero,
       p.total,
       p.hp,
@@ -240,10 +239,11 @@ const MostrarTodosPokemonsFraquezas = async (req, res) => {
       p.velocidade,
       p.imagem,
       p.numero_pokemon,
+      p.estagio_evolucao
       string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
       string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
       string_agg(DISTINCT h.habilidade, ', ') as habilidades,
-      string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
+      string_agg(DISTINCT h.descricao, ', ') as descricoes_habilidade,
       string_agg(DISTINCT t.tipo, ', ') as tipos,
       string_agg(DISTINCT t.imagem_tipagem, ', ') as img_tipo
   FROM
@@ -296,29 +296,29 @@ const MostrarTodosPokemonsTipagem = async (req, res) => {
 
     const pokemon = await pool.query(
       `SELECT
-    p.pokemon_info_id,
-    p.nome,
-    p.descricao,
-    p.altura,
-    p.peso,
-    c.categoria,
-    string_agg(DISTINCT c.imagem_categoria, ', ') as img_categoria,
-    g.genero,
-    p.total,
-    p.hp,
-    p.ataque,
-    p.defesa,
-    p.especial_ataque,
-    p.especial_defesa,
-    p.velocidade,
-    p.imagem,
-    p.numero_pokemon,
-    string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
-    string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
-    string_agg(DISTINCT h.habilidade, ', ') as habilidades,
-    string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
-    string_agg(DISTINCT t.tipo, ', ') as tipos,
-    string_agg(DISTINCT t.imagem_tipagem, ', ') as img_tipo
+      p.pokemon_info_id,
+      p.nome,
+      p.descricao,
+      p.altura,
+      p.peso,
+      c.categoria,
+      g.genero,
+      p.total,
+      p.hp,
+      p.ataque,
+      p.defesa,
+      p.especial_ataque,
+      p.especial_defesa,
+      p.velocidade,
+      p.imagem,
+      p.numero_pokemon,
+      p.estagio_evolucao
+      string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
+      string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
+      string_agg(DISTINCT h.habilidade, ', ') as habilidades,
+      string_agg(DISTINCT h.descricao, ', ') as descricoes_habilidade,
+      string_agg(DISTINCT t.tipo, ', ') as tipos,
+      string_agg(DISTINCT t.imagem_tipagem, ', ') as img_tipo
 FROM
     pokemon_info p
     INNER JOIN categorias c ON p.categoria_id = c.categoria_id
@@ -363,29 +363,29 @@ const MostrarPokemonPeloNome = async (req, res) => {
   try {
     const pokemon = await pool.query(`
     SELECT
-    p.pokemon_info_id,
-    p.nome,
-    p.descricao,
-    p.altura,
-    p.peso,
-    c.categoria,
-    string_agg(DISTINCT c.imagem_categoria, ', ') as img_categoria,
-    g.genero,
-    p.total,
-    p.hp,
-    p.ataque,
-    p.defesa,
-    p.especial_ataque,
-    p.especial_defesa,
-    p.velocidade,
-    p.imagem,
-    p.numero_pokemon,
-    string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
-    string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
-    string_agg(DISTINCT h.habilidade, ', ') as habilidades,
-    string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
-    string_agg(DISTINCT t.tipo, ', ') as tipos,
-    string_agg(DISTINCT t.imagem_tipagem, ', ') as img_tipo
+      p.pokemon_info_id,
+      p.nome,
+      p.descricao,
+      p.altura,
+      p.peso,
+      c.categoria,
+      g.genero,
+      p.total,
+      p.hp,
+      p.ataque,
+      p.defesa,
+      p.especial_ataque,
+      p.especial_defesa,
+      p.velocidade,
+      p.imagem,
+      p.numero_pokemon,
+      p.estagio_evolucao
+      string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
+      string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
+      string_agg(DISTINCT h.habilidade, ', ') as habilidades,
+      string_agg(DISTINCT h.descricao, ', ') as descricoes_habilidade,
+      string_agg(DISTINCT t.tipo, ', ') as tipos,
+      string_agg(DISTINCT t.imagem_tipagem, ', ') as img_tipo
 FROM
     pokemon_info p
     INNER JOIN categorias c ON p.categoria_id = c.categoria_id
@@ -442,7 +442,6 @@ const MostrarTodosPokemonsAleatorio = async (req, res) => {
     p.altura,
     p.peso,
     c.categoria,
-    string_agg(DISTINCT c.imagem_categoria, ', ') as img_categoria,
     g.genero,
     p.total,
     p.hp,
@@ -453,10 +452,11 @@ const MostrarTodosPokemonsAleatorio = async (req, res) => {
     p.velocidade,
     p.imagem,
     p.numero_pokemon,
+    p.estagio_evolucao
     string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
     string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
     string_agg(DISTINCT h.habilidade, ', ') as habilidades,
-    string_agg(DISTINCT h.imagem_habilidade, ', ') as img_habilidade,
+    string_agg(DISTINCT h.descricao, ', ') as descricoes_habilidade,
     string_agg(DISTINCT t.tipo, ', ') as tipos,
     string_agg(DISTINCT t.imagem_tipagem, ', ') as img_tipo
 FROM
@@ -888,7 +888,6 @@ const CadastrarPokemonControllers = async (req, res) => {
       .json({ Mensagem: "Erro ao cadastrar pokemon.", erro });
   }
 };
-
 
 
 // funções de exclusão
