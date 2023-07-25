@@ -167,7 +167,7 @@ const MostrarPokemonPeloID = async (req, res) => {
       p.velocidade,
       p.imagem,
       p.numero_pokemon,
-      p.estagio_evolucao
+      p.estagio_evolucao,
       string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
       string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
       string_agg(DISTINCT h.habilidade, ', ') as habilidades,
@@ -239,7 +239,7 @@ const MostrarTodosPokemonsFraquezas = async (req, res) => {
       p.velocidade,
       p.imagem,
       p.numero_pokemon,
-      p.estagio_evolucao
+      p.estagio_evolucao,
       string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
       string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
       string_agg(DISTINCT h.habilidade, ', ') as habilidades,
@@ -312,7 +312,7 @@ const MostrarTodosPokemonsTipagem = async (req, res) => {
       p.velocidade,
       p.imagem,
       p.numero_pokemon,
-      p.estagio_evolucao
+      p.estagio_evolucao,
       string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
       string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
       string_agg(DISTINCT h.habilidade, ', ') as habilidades,
@@ -379,7 +379,7 @@ const MostrarPokemonPeloNome = async (req, res) => {
       p.velocidade,
       p.imagem,
       p.numero_pokemon,
-      p.estagio_evolucao
+      p.estagio_evolucao,
       string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
       string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
       string_agg(DISTINCT h.habilidade, ', ') as habilidades,
@@ -452,7 +452,7 @@ const MostrarTodosPokemonsAleatorio = async (req, res) => {
     p.velocidade,
     p.imagem,
     p.numero_pokemon,
-    p.estagio_evolucao
+    p.estagio_evolucao,
     string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
     string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
     string_agg(DISTINCT h.habilidade, ', ') as habilidades,
