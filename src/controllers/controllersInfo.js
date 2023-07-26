@@ -526,7 +526,7 @@ const CadastrarCategoria = async (req, res) => {
         "INSERT INTO categorias (categoria) VALUES ($1)",
         [nova_categoria]
       );
-      
+
       categoria_id = cadastroCategoria.rows[0].categoria_id;
     }
     return res
@@ -603,7 +603,7 @@ const CadastrarHabilidade = async (req, res) => {
         "INSERT INTO habilidades (habilidade, descricao) VALUES ($1, $2)",
         [nova_habilidade, nova_descricao]
       );
-      
+
       habilidade_id = cadastroHabilidade.rows[0].habilidade_id;
     }
 
@@ -643,7 +643,7 @@ const CadastrarTipagem = async (req, res) => {
         "INSERT INTO tipagem (tipo, imagem_tipagem) VALUES ($1, $2)",
         [nova_tipagem, nova_imagem_tipagem]
       );
-      
+
       tipagem_id = cadastroTipagem.rows[0].tipagem_id;
     }
 
@@ -656,7 +656,6 @@ const CadastrarTipagem = async (req, res) => {
       .json({ Mensagem: "Erro ao cadastrar tipagem.", erro });
   }
 };
-
 
 const CadastrarPokemonControllers = async (req, res) => {
   const {
@@ -718,11 +717,12 @@ const CadastrarPokemonControllers = async (req, res) => {
       !numeroPokemonFormatado ||
       isNaN(estagioEvolucaoFormatado)
     ) {
-      return res
-        .status(400)
-        .json({ Mensagem: "Há campo(s) inválido(s) ou vazio(s).", status: 400 });
+      return res.status(400).json({
+        Mensagem: "Há campo(s) inválido(s) ou vazio(s).",
+        status: 400,
+      });
     }
-    console.log("entrou!!")
+
     let total =
       (ataqueFormatado +
         defesaFormatada +
@@ -764,9 +764,10 @@ const CadastrarPokemonControllers = async (req, res) => {
         [tipagem_nome]
       );
       if (verificaTipagem.rows.length === 0) {
-        return res
-          .status(400)
-          .json({ Mensagem: `Tipagem inválida: ${tipagem_nome}.`, status: 400 });
+        return res.status(400).json({
+          Mensagem: `Tipagem inválida: ${tipagem_nome}.`,
+          status: 400,
+        });
       }
       const tipagem_id = verificaTipagem.rows[0].tipagem_id;
       list_tipagem_id.push(tipagem_id);
@@ -780,9 +781,10 @@ const CadastrarPokemonControllers = async (req, res) => {
         [fraqueza_nome]
       );
       if (verificaFraqueza.rows.length === 0) {
-        return res
-          .status(400)
-          .json({ Mensagem: `Fraqueza inválida: ${fraqueza_nome}.`, status: 400 });
+        return res.status(400).json({
+          Mensagem: `Fraqueza inválida: ${fraqueza_nome}.`,
+          status: 400,
+        });
       }
       const fraquezas_id = verificaFraqueza.rows[0].fraquezas_id;
       list_fraqueza_id.push(fraquezas_id);
@@ -802,18 +804,17 @@ const CadastrarPokemonControllers = async (req, res) => {
       list_habilidade_id.push(habilidade_id);
     }
 
-
     const verificaNumeroPokemon = await pool.query(
       "SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1",
       [numeroPokemonFormatado]
     );
-  
+
     if (verificaNumeroPokemon.rows.length > 0) {
       return res
         .status(400)
         .json({ Mensagem: "Número pokemon já cadastrado!", status: 400 });
     }
-    console.log(total)
+    console.log(total);
     // Inserindo nas tabelas
     const CadastroPokemon = await pool.query(
       `INSERT INTO pokemon_info (
@@ -853,7 +854,7 @@ const CadastrarPokemonControllers = async (req, res) => {
         estagioEvolucaoFormatado,
       ]
     );
-      console.log(CadastroPokemon.rows)
+    console.log(CadastroPokemon.rows);
     const pokemon_info_id = CadastroPokemon.rows[0].pokemon_info_id;
 
     // Relacionando as tabelas
@@ -888,7 +889,6 @@ const CadastrarPokemonControllers = async (req, res) => {
       .json({ Mensagem: "Erro ao cadastrar pokemon.", erro });
   }
 };
-
 
 // funções de exclusão
 const ExcluirCategoria = async (req, res) => {
@@ -1245,41 +1245,45 @@ const EditarTipagem = async (req, res) => {
 
 const EditarPokemon = async (req, res) => {
   try {
+    const { pokemon_id } = req.params.id;
+
     const {
       novoNome,
       novaDescricao,
-      novaImagem,
-      novaCategoria,
       novaAltura,
       novoPeso,
-      novoNumeroPokemon,
-      novoGenero,
-      novaTipagem,
-      novaHabilidade,
-      novaFraqueza,
+      novaCategoria,
       novoHP,
+      novoAtaque,
+      novaDefesa,
       novoAtaqueEspecial,
       novaDefesaEspecial,
-      novaDefesa,
-      novoAtaque,
       novaVelocidade,
+      novaImagem,
+      novoNumeroPokemon,
+      novoGenero,
+
+      novaFraqueza,
+      novaHabilidade,
+      novaTipagem,
+      novaEstagioEvolucao,
     } = req.body;
 
     // Formatar os campos
-  const nomeFormatado = primeiraLetraMaiuscula(novoNome);
-  const descricaoFormatada = primeiraLetraMaiuscula(novaDescricao);
-  const alturaFormatada = String(novaAltura).trim();
-  const pesoFormatado = String(novoPeso).trim();
-  const categoriaFormatada = primeiraLetraMaiuscula(novaCategoria);
-  const generoFormatado = primeiraLetraMaiuscula(novoGenero);
-  const hpFormatado = String(novoHP).trim();
-  const ataqueFormatado = String(novoAtaque).trim();
-  const defesaFormatada = String(novaDefesa).trim();
-  const especialAtaqueFormatado = String(novoAtaqueEspecial).trim();
-  const especialDefesaFormatada = String(novaDefesaEspecial).trim();
-  const velocidadeFormatada = String(novaVelocidade).trim();
-  const imagemFormatada = novaImagem.trim();
-  const numeroPokemonFormatado = String(novoNumeroPokemon).trim();
+    const nomeFormatado = primeiraLetraMaiuscula(novoNome);
+    const descricaoFormatada = primeiraLetraMaiuscula(novaDescricao);
+    const imagemFormatada = novaImagem.trim();
+    const categoriaFormatada = primeiraLetraMaiuscula(novaCategoria);
+    const alturaFormatada = String(novaAltura).trim();
+    const pesoFormatado = String(novoPeso).trim();
+    const numeroPokemonFormatado = String(novoNumeroPokemon).trim();
+    const hpFormatado = String(novoHP).trim();
+    const ataqueFormatado = String(novoAtaque).trim();
+    const defesaFormatada = String(novaDefesa).trim();
+    const especialAtaqueFormatado = String(novoAtaqueEspecial).trim();
+    const especialDefesaFormatada = String(novaDefesaEspecial).trim();
+    const velocidadeFormatada = String(novaVelocidade).trim();
+    const generoFormatado = primeiraLetraMaiuscula(novoGenero);
 
     if (
       !nomeFormatado &&
@@ -1289,27 +1293,172 @@ const EditarPokemon = async (req, res) => {
       !alturaFormatada &&
       !pesoFormatado &&
       !numeroPokemonFormatado &&
+      !hpFormatado &&
+      !ataqueFormatado &&
+      !defesaFormatada &&
+      !especialAtaqueFormatado &&
+      !especialDefesaFormatada &&
+      !velocidadeFormatada &&
       !generoFormatado &&
-      !novaTipagem &&
-      !novaHabilidade &&
       !novaFraqueza &&
-      !novoHP &&
-      !novoAtaqueEspecial &&
-      !novaDefesaEspecial &&
-      !novaDefesa &&
-      !novoAtaque &&
-      !novaVelocidade
+      !novaHabilidade &&
+      !novaTipagem &&
+      !novaEstagioEvolucao
     ) {
       return res
         .status(200)
         .json({ Mensagem: "Modifique pelo menos um campo.", status: 400 });
     }
+
+    let novoTotal =
+      (ataqueFormatado +
+        defesaFormatada +
+        hpFormatado +
+        especialAtaqueFormatado +
+        especialDefesaFormatada +
+        velocidadeFormatada) /
+      6;
+
+    if (nomeFormatado) {
+      await pool.query(
+        "UPDATE pokemon_info SET nome = $1 WHERE pokemon_info_id = $2",
+        [nomeFormatado, pokemon_id]
+      );
+    }
+
+    if (descricaoFormatada) {
+      await pool.query(
+        "UPDATE pokemon_info SET descricao = $1 WHERE pokemon_info_id = $2",
+        [descricaoFormatada, pokemon_id]
+      );
+    }
+
+    if (imagemFormatada) {
+      await pool.query(
+        "UPDATE pokemon_info SET imagem = $1 WHERE pokemon_info_id = $2",
+        [imagemFormatada, pokemon_id]
+      );
+    }
+
+    if (categoriaFormatada) {
+      const verificaCategoria = await pool.query(
+        "SELECT categoria_id FROM categorias WHERE categoria = $1",
+        [categoriaFormatada]
+      );
+      if (verificaCategoria.rows.length === 0) {
+        return res
+          .status(400)
+          .json({ Mensagem: "Categoria inválida.", status: 400 });
+      }
+      const categoria_id = verificaCategoria.rows[0].categoria_id;
+
+      await pool.query(
+        "UPDATE pokemon_info SET categoria_id = $1 WHERE pokemon_info_id = $2",
+        [categoria_id, pokemon_id]
+      );
+    }
+
+    if (alturaFormatada) {
+      await pool.query(
+        "UPDATE pokemon_info SET altura = $1 WHERE pokemon_info_id = $2",
+        [alturaFormatada, pokemon_id]
+      );
+    }
+
+    if (pesoFormatado) {
+      await pool.query(
+        "UPDATE pokemon_info SET peso = $1 WHERE pokemon_info_id = $2",
+        [pesoFormatado, pokemon_id]
+      );
+    }
+
+    if (numeroPokemonFormatado) {
+      const verificaNumeroPokemon = await pool.query(
+        "SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1",
+        [numeroPokemonFormatado]
+      );
+
+      if (verificaNumeroPokemon.rows.length > 0) {
+        return res
+          .status(400)
+          .json({ Mensagem: "Número pokemon já cadastrado!", status: 400 });
+      }
+
+      await pool.query(
+        "UPDATE pokemon_info SET numero_pokemon = $1 WHERE pokemon_info_id = $2",
+        [numeroPokemonFormatado, pokemon_id]
+      );
+    }
+
+    if (hpFormatado) {
+      await pool.query(
+        "UPDATE pokemon_info SET hp = $1 WHERE pokemon_info_id = $2",
+        [hpFormatado, pokemon_id]
+      );
+    }
+
+    if (ataqueFormatado) {
+      await pool.query(
+        "UPDATE pokemon_info SET ataque = $1 WHERE pokemon_info_id = $2",
+        [ataqueFormatado, pokemon_id]
+      );
+    }
+
+    if (defesaFormatada) {
+      await pool.query(
+        "UPDATE pokemon_info SET defesa = $1 WHERE pokemon_info_id = $2",
+        [defesaFormatada, pokemon_id]
+      );
+    }
+
+    if (especialAtaqueFormatado) {
+      await pool.query(
+        "UPDATE pokemon_info SET especial_ataque = $1 WHERE pokemon_info_id = $2",
+        [especialAtaqueFormatado, pokemon_id]
+      );
+    }
+
+    if (especialAtaqueFormatado) {
+      await pool.query(
+        "UPDATE pokemon_info SET especial_defesa = $1 WHERE pokemon_info_id = $2",
+        [especialAtaqueFormatado, pokemon_id]
+      );
+    }
+
+    if (velocidadeFormatada) {
+      await pool.query(
+        "UPDATE pokemon_info SET velocidade = $1 WHERE pokemon_info_id = $2",
+        [velocidadeFormatada, pokemon_id]
+      );
+    }
+
+    if (velocidadeFormatada) {
+      await pool.query(
+        "UPDATE pokemon_info SET velocidade = $1 WHERE pokemon_info_id = $2",
+        [velocidadeFormatada, pokemon_id]
+      );
+    }
+
+    if (generoFormatado) {
+      const verificaGenero = await pool.query(
+        "SELECT genero_id FROM generos WHERE genero = $1",
+        [generoFormatado]
+      );
+      if (verificaGenero.rows.length === 0) {
+        return res
+          .status(400)
+          .json({ Mensagem: "Gênero inválido.", status: 400 });
+      }
+      const genero_id = verificaGenero.rows[0].genero_id;
+
+      await pool.query(
+        "UPDATE pokemon_info SET genero_id = $1 WHERE pokemon_info_id = $2",
+        [genero_id, pokemon_id]
+      );
+    }
   } catch (erro) {
     res.status(500).json({ Mensagem: "Erro ao editar pokemon.", erro });
   }
-
-
-
 };
 
 // grade evolutiva
