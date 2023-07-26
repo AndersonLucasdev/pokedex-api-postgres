@@ -765,7 +765,7 @@ const CadastrarPokemonControllers = async (req, res) => {
       );
       if (verificaTipagem.rows.length === 0) {
         return res.status(400).json({
-          Mensagem: `Tipagem inválida: ${tipagem_nome}.`,
+          Mensagem: `Tipo inválido: ${tipagem_nome}.`,
           status: 400,
         });
       }
@@ -1105,7 +1105,7 @@ const EditarCategoria = async (req, res) => {
   const { categoria, novoNomeCategoria } = req.body;
 
   try {
-    if (!categoria) {
+    if (!novoNomeCategoria) {
       return res
         .status(200)
         .json({ Mensagem: "Há campo(s) vazio(s).", status: 400 });
@@ -1139,10 +1139,10 @@ const EditarFraqueza = async (req, res) => {
   const { fraqueza, novoNomeFraqueza, NovaImagemFraqueza } = req.body;
 
   try {
-    if (!fraqueza) {
+    if (!novoNomeFraqueza && !NovaImagemFraqueza) {
       return res
         .status(200)
-        .json({ Mensagem: "Há campo(s) vazio(s).", status: 400 });
+        .json({ Mensagem: "Altere pelo menos um campo.", status: 400 });
     }
 
     const tratamentoNomeFraqueza = primeiraLetraMaiuscula(fraqueza);
@@ -1174,10 +1174,10 @@ const EditarHabilidade = async (req, res) => {
   const { habilidade, novoNomeHabildade, novaDescricao } = req.body;
 
   try {
-    if (!habilidade) {
+    if (!novoNomeHabildade && !novaDescricao) {
       return res
         .status(200)
-        .json({ Mensagem: "Há campo(s) vazio(s).", status: 400 });
+        .json({ Mensagem: "Altere pelo menos um campo.", status: 400 });
     }
 
     const tratamentoNomeHabilidade = primeiraLetraMaiuscula(habilidade);
@@ -1212,10 +1212,10 @@ const EditarTipagem = async (req, res) => {
   const { tipo, NovoNomeTipo, NovaImagemTipagem } = req.body;
 
   try {
-    if (!tipo) {
+    if (!NovoNomeTipo && !NovaImagemTipagem) {
       return res
         .status(200)
-        .json({ Mensagem: "Há campo(s) vazio(s).", status: 400 });
+        .json({ Mensagem: "Altere pelo menos um campo.", status: 400 });
     }
 
     const tratamentoNomeTipo = primeiraLetraMaiuscula(tipo);
@@ -1456,6 +1456,104 @@ const EditarPokemon = async (req, res) => {
         [genero_id, pokemon_id]
       );
     }
+
+    if (novaFraqueza) {
+      // deletando relacionamentos
+      await pool.query(
+        `DELETE FROM public.pokemon_fraquezas
+      WHERE pokemon_info_id = %1`,
+        [pokemon_id]
+      );
+
+      const list_fraqueza_id = [];
+      for (const fraqueza_nome of fraqueza) {
+        const verificaFraqueza = await pool.query(
+          "SELECT fraquezas_id FROM fraquezas WHERE fraqueza = $1",
+          [fraqueza_nome]
+        );
+        if (verificaFraqueza.rows.length === 0) {
+          return res.status(400).json({
+            Mensagem: `Fraqueza inválida: ${fraqueza_nome}.`,
+            status: 400,
+          });
+        }
+        const fraquezas_id = verificaFraqueza.rows[0].fraquezas_id;
+        list_fraqueza_id.push(fraquezas_id);
+      }
+
+      for (const fraqueza_id of list_fraqueza_id) {
+        await pool.query(
+          "INSERT INTO pokemon_fraquezas (pokemon_info_id, fraquezas_id) VALUES ($1, $2)",
+          [pokemon_id, fraqueza_id]
+        );
+      }
+    }
+
+    if (novaHabilidade) {
+      // deletando relacionamentos
+      await pool.query(
+        `DELETE FROM public.pokemon_habilidades
+      WHERE pokemon_info_id = %1`,
+        [pokemon_id]
+      );
+
+      const list_habilidades_id = [];
+      for (const habilidade_nome of novaHabilidade) {
+        const verificaHabilidade = await pool.query(
+          "SELECT habilidade_id FROM habilidades WHERE habilidade = $1",
+          [habilidade_nome]
+        );
+        if (verificaHabilidade.rows.length === 0) {
+          return res.status(400).json({
+            Mensagem: `Habilidade inválida: ${habilidade_nome}.`,
+            status: 400,
+          });
+        }
+        const habilidades_id = verificaHabilidade.rows[0].habilidade_id;
+        list_habilidades_id.push(habilidades_id);
+      }
+
+      for (const habilidade_id of list_habilidades_id) {
+        await pool.query(
+          "INSERT INTO pokemon_habilidades (pokemon_info_id, habilidade_id) VALUES ($1, $2)",
+          [pokemon_id, habilidade_id]
+        );
+      }
+    }
+
+    if (novaTipagem) {
+      // deletando relacionamentos
+      await pool.query(
+        `DELETE FROM public.pokemon_tipagem
+      WHERE pokemon_info_id = %1`,
+        [pokemon_id]
+      );
+
+      const list_tipagem_id = [];
+      for (const tipagem_nome of novaTipagem) {
+        const verificaTipagem = await pool.query(
+          "SELECT tipagem_id FROM tipagem WHERE tipo = $1",
+          [tipagem_nome]
+        );
+        if (verificaTipagem.rows.length === 0) {
+          return res.status(400).json({
+            Mensagem: `Tipo inválida: ${tipagem_nome}.`,
+            status: 400,
+          });
+        }
+        const tipos_id = verificaTipagem.rows[0].tipagem_id;
+        list_tipagem_id.push(tipos_id);
+      }
+
+      for (const tipo_id of list_tipagem_id) {
+        await pool.query(
+          "INSERT INTO pokemon_tipagem (pokemon_info_id, tipagem_id) VALUES ($1, $2)",
+          [pokemon_id, tipo_id]
+        );
+      }
+    }
+
+    return res.status(200).json({ Mensagem: "Pokemon editado com sucesso." });
   } catch (erro) {
     res.status(500).json({ Mensagem: "Erro ao editar pokemon.", erro });
   }
@@ -1675,4 +1773,9 @@ export {
   MostrarGradeEvolutivaPokemon,
   primeiraLetraMaiuscula,
   ExcluirGradeEvolutivaPokemon,
+  EditarCategoria,
+  EditarHabilidade,
+  EditarFraqueza,
+  EditarPokemon,
+  EditarTipagem,
 };
