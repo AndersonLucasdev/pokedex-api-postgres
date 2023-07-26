@@ -357,6 +357,152 @@ FROM
   }
 };
 
+const MostrarTodosPokemonsHabilidade = async (req, res) => {
+  const { habilidade } = req.body;
+
+  try {
+    if (!habilidade) {
+      return res
+        .status(200)
+        .json({ Mensagem: "Há campo(s) vazio(s).", status: 400 });
+    }
+
+    const pokemon = await pool.query(
+      `SELECT
+      p.pokemon_info_id,
+      p.nome,
+      p.descricao,
+      p.altura,
+      p.peso,
+      c.categoria,
+      g.genero,
+      p.total,
+      p.hp,
+      p.ataque,
+      p.defesa,
+      p.especial_ataque,
+      p.especial_defesa,
+      p.velocidade,
+      p.imagem,
+      p.numero_pokemon,
+      p.estagio_evolucao,
+      string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
+      string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
+      string_agg(DISTINCT h.habilidade, ', ') as habilidades,
+      string_agg(DISTINCT h.descricao, ', ') as descricoes_habilidade,
+      string_agg(DISTINCT t.tipo, ', ') as tipos,
+      string_agg(DISTINCT t.imagem_tipagem, ', ') as img_tipo
+FROM
+    pokemon_info p
+    INNER JOIN categorias c ON p.categoria_id = c.categoria_id
+    INNER JOIN generos g ON p.genero_id = g.genero_id
+    INNER JOIN pokemon_fraquezas pf ON p.pokemon_info_id = pf.pokemon_info_id
+    INNER JOIN fraquezas f ON pf.fraquezas_id = f.fraquezas_id
+    INNER JOIN pokemon_habilidades ph ON p.pokemon_info_id = ph.pokemon_info_id
+    INNER JOIN habilidades h ON ph.habilidade_id = h.habilidade_id
+    INNER JOIN pokemon_tipagem pt ON p.pokemon_info_id = pt.pokemon_info_id
+    INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
+    WHERE habilidade = $1 
+  GROUP BY
+    p.pokemon_info_id,
+    p.nome,
+    p.descricao,
+    p.altura,
+    p.peso,
+    c.categoria,
+    g.genero,
+    p.total,
+    p.hp,
+    p.ataque,
+    p.defesa,
+    p.especial_ataque,
+    p.especial_defesa,
+    p.velocidade,
+    p.imagem,
+    p.numero_pokemon
+    ORDER BY numero_pokemon`,
+      [habilidade]
+    );
+
+    return res.status(200).json(pokemon.rows);
+  } catch (erro) {
+    return res.status(500).json({ Mensagem: erro.message });
+  }
+};
+
+const MostrarTodosPokemonsCategoria = async (req, res) => {
+  const { categoria } = req.body;
+
+  try {
+    if (!categoria) {
+      return res
+        .status(200)
+        .json({ Mensagem: "Há campo(s) vazio(s).", status: 400 });
+    }
+
+    const pokemon = await pool.query(
+      `SELECT
+      p.pokemon_info_id,
+      p.nome,
+      p.descricao,
+      p.altura,
+      p.peso,
+      c.categoria,
+      g.genero,
+      p.total,
+      p.hp,
+      p.ataque,
+      p.defesa,
+      p.especial_ataque,
+      p.especial_defesa,
+      p.velocidade,
+      p.imagem,
+      p.numero_pokemon,
+      p.estagio_evolucao,
+      string_agg(DISTINCT f.fraqueza, ', ') as fraquezas,
+      string_agg(DISTINCT f.imagem_fraqueza, ', ') as img_fraquezas,
+      string_agg(DISTINCT h.habilidade, ', ') as habilidades,
+      string_agg(DISTINCT h.descricao, ', ') as descricoes_habilidade,
+      string_agg(DISTINCT t.tipo, ', ') as tipos,
+      string_agg(DISTINCT t.imagem_tipagem, ', ') as img_tipo
+FROM
+    pokemon_info p
+    INNER JOIN categorias c ON p.categoria_id = c.categoria_id
+    INNER JOIN generos g ON p.genero_id = g.genero_id
+    INNER JOIN pokemon_fraquezas pf ON p.pokemon_info_id = pf.pokemon_info_id
+    INNER JOIN fraquezas f ON pf.fraquezas_id = f.fraquezas_id
+    INNER JOIN pokemon_habilidades ph ON p.pokemon_info_id = ph.pokemon_info_id
+    INNER JOIN habilidades h ON ph.habilidade_id = h.habilidade_id
+    INNER JOIN pokemon_tipagem pt ON p.pokemon_info_id = pt.pokemon_info_id
+    INNER JOIN tipagem t ON pt.tipagem_id = t.tipagem_id
+    WHERE categoria = $1 
+  GROUP BY
+    p.pokemon_info_id,
+    p.nome,
+    p.descricao,
+    p.altura,
+    p.peso,
+    c.categoria,
+    g.genero,
+    p.total,
+    p.hp,
+    p.ataque,
+    p.defesa,
+    p.especial_ataque,
+    p.especial_defesa,
+    p.velocidade,
+    p.imagem,
+    p.numero_pokemon
+    ORDER BY numero_pokemon`,
+      [categoria]
+    );
+
+    return res.status(200).json(pokemon.rows);
+  } catch (erro) {
+    return res.status(500).json({ Mensagem: erro.message });
+  }
+};
+
 const MostrarPokemonPeloNome = async (req, res) => {
   const { nome } = req.body;
 
@@ -1778,4 +1924,6 @@ export {
   EditarFraqueza,
   EditarPokemon,
   EditarTipagem,
+  MostrarTodosPokemonsCategoria,
+  MostrarTodosPokemonsHabilidade,
 };

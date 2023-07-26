@@ -29,6 +29,8 @@ import {MostrarTodosPokemonsControllers,
     EditarFraqueza,
     EditarPokemon,
     EditarTipagem,
+    MostrarTodosPokemonsCategoria,
+    MostrarTodosPokemonsHabilidade,
     } from "../controllers/controllersInfo.js"
 
 import { CadastrarUsuarioControllers, Login, validarToken, deletarToken, EncontrarUsuarioId, removeUsuarioID, EncontrarTodosUsuarios } from "../controllers/controllersUser.js"
@@ -49,6 +51,9 @@ route.post("/mostrar/nome", MostrarPokemonPeloNome)
 route.get("/mostrar_aleatorio", MostrarTodosPokemonsAleatorio)
 route.post("/mostrar/por_tipagem", MostrarTodosPokemonsTipagem)
 route.post("/mostrar/por_fraquezas", MostrarTodosPokemonsFraquezas)
+route.post("/mostrar/por_habilidade", MostrarTodosPokemonsHabilidade)
+route.post("/mostrar/por_categoria", MostrarTodosPokemonsCategoria)
+
 
 // rotas cadastrar
 route.post("/cadastrar/pokemon", CadastrarPokemonControllers)
