@@ -1821,47 +1821,48 @@ const MostrarGradeEvolutivaPokemon = async (req, res) => {
 };
 
 const CadastrarGradeEvolutivaPokemon = async (req, res) => {
-  // const { nomePokemon, numeroPokemon, nomeEvolucaoPokemon, numeroPokemonEvolucao, nivelEvolucao} = req.body;
-  // // Formatar os campos
-  // try {
-  //   if (!nomePokemon || !numeroPokemon || !nomeEvolucaoPokemon || !numeroPokemonEvolucao || !nivelEvolucao) {
-  //     return res.status(400).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
-  //   }
-  //   const numeroPokemonFormatado = String(numeroPokemon).trim();
-  //   const numeroPokemonEvolucaoFormatado = String(numeroPokemonEvolucao).trim();
-  //   const nivelEvolucaoFormatado = nivelEvolucao.trim()
-  //   // Verificar pokemon
-  //   let pokemon_id;
-  //   const verificaNumeroPokemon = await pool.query(
-  //     `SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1`,
-  //     [numeroPokemonFormatado]
-  //   );
-  //   pokemon_id = verificaNumeroPokemon.rows[0].pokemon_info_id;
-  //   // Verificar evolucao pokemon
-  //   let pokemon_id_evolucao;
-  //   const verificaNumeroPokemonEvolucao = await pool.query(
-  //     `SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1`,
-  //     [numeroPokemonEvolucaoFormatado]
-  //   );
-  //   pokemon_id_evolucao = verificaNumeroPokemonEvolucao.rows[0].pokemon_info_id;
-  //   // Inserir nas tabelas
-  //   const cadastroPokemon = await pool.query(
-  //     `INSERT INTO pokemon_evolucoes (
-  //       pokemon_info_id,
-  //       evolucao_pokemon_info_id,
-  //       nivel
-  //     ) VALUES ($1, $2, $3) RETURNING pokemon_info_id`,
-  //     [
-  //       pokemon_id,
-  //       evolucao_pokemon_info_id,
-  //       nivelEvolucaoFormatado
-  //     ]
-  //   );
-  //   const pokemon_info_id = cadastroPokemon.rows[0].pokemon_info_id;
-  //   return res.status(200).json({ Mensagem: 'Grade cadastrada com sucesso.' });
-  // } catch (erro) {
-  //   return res.status(500).json({ Mensagem: 'Erro ao cadastrar grade pokemon.', erro });
-  // }
+  const { numeroPokemon, numeroPokemonEvolucao} = req.body;
+  // Formatar os campos
+  try {
+    if (!numeroPokemon || !numeroPokemonEvolucao) {
+      return res.status(400).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+    }
+    const numeroPokemonFormatado = String(numeroPokemon).trim();
+    const numeroPokemonEvolucaoFormatado = String(numeroPokemonEvolucao).trim();
+    // Verificar pokemon
+    let pokemon_id;
+    const verificaNumeroPokemon = await pool.query(
+      `SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1`,
+      [numeroPokemonFormatado]
+    );
+    pokemon_id = verificaNumeroPokemon.rows[0].pokemon_info_id;
+    // Verificar evolucao pokemon
+    let pokemon_id_evolucao;
+    const verificaNumeroPokemonEvolucao = await pool.query(
+      `SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1`,
+      [numeroPokemonEvolucaoFormatado]
+    );
+    pokemon_id_evolucao = verificaNumeroPokemonEvolucao.rows[0].pokemon_info_id;
+
+    verificaGradeJaCadastrada = 
+    // Inserir nas tabelas
+    const cadastroPokemon = await pool.query(
+      `INSERT INTO pokemon_evolucoes (
+        pokemon_info_id,
+        evolucao_pokemon_info_id
+      ) VALUES ($1, $2) RETURNING pokemon_info_id`,
+      [
+        pokemon_id,
+        evolucao_pokemon_info_id
+      ]
+    );
+    const pokemon_info_id = cadastroPokemon.rows[0].pokemon_info_id;
+
+
+    return res.status(200).json({ Mensagem: 'Grade cadastrada com sucesso.' });
+  } catch (erro) {
+    return res.status(500).json({ Mensagem: 'Erro ao cadastrar grade pokemon.', erro });
+  }
 };
 
 const ExcluirGradeEvolutivaPokemon = async (req, res) => {

@@ -102,7 +102,6 @@ const pool = new Pool({
         evolucao_id SERIAL PRIMARY KEY,
         pokemon_info_id INTEGER,
         evolucao_pokemon_info_id INTEGER,
-        nivel INTEGER,
         FOREIGN KEY (pokemon_info_id) REFERENCES pokemon_info(pokemon_info_id),
         FOREIGN KEY (evolucao_pokemon_info_id) REFERENCES pokemon_info(pokemon_info_id)
       );
