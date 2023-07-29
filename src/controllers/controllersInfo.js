@@ -1706,6 +1706,7 @@ const EditarPokemon = async (req, res) => {
 };
 
 
+
 // grade evolutiva
 const MostrarGradeEvolutivaPokemon = async (req, res) => {
   const { nome, numeroPokemon } = req.body;
