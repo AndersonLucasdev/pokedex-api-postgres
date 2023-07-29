@@ -1705,6 +1705,7 @@ const EditarPokemon = async (req, res) => {
   }
 };
 
+
 // grade evolutiva
 const MostrarGradeEvolutivaPokemon = async (req, res) => {
   const { nome, numeroPokemon } = req.body;
@@ -1776,8 +1777,8 @@ const MostrarGradeEvolutivaPokemon = async (req, res) => {
     pi.imagem, 
     pi.nome, 
     pi.numero_pokemon, 
-    STRING_AGG(DISTINCT t.tipo, ', ') AS tipos,
-    pe.nivel
+    STRING_AGG(DISTINCT t.tipo, ', ') AS tipos
+
   FROM 
     pokemon_info pi
     INNER JOIN pokemon_tipagem pt ON pt.pokemon_info_id = pi.pokemon_info_id
@@ -1785,9 +1786,11 @@ const MostrarGradeEvolutivaPokemon = async (req, res) => {
     INNER JOIN familia ON pi.pokemon_info_id = familia.pokemon_id
     LEFT JOIN pokemon_evolucoes pe ON pe.evolucao_pokemon_info_id = pi.pokemon_info_id
   WHERE 
-    (pe.nivel IS NULL) AND pi.pokemon_info_id = (SELECT menor_id FROM menor_id)
+  pi.pokemon_info_id = (SELECT menor_id FROM menor_id)
   GROUP BY 
-    pi.imagem, pi.nome, pi.numero_pokemon, pe.nivel;
+    pi.imagem, pi.nome, pi.numero_pokemon;
+  ORDER BY
+    pi.estagio_evolucao
   
   WITH familia AS (
     SELECT unnest(get_familia_evolucao($1)) AS pokemon_id
@@ -1796,8 +1799,8 @@ const MostrarGradeEvolutivaPokemon = async (req, res) => {
     pi.imagem, 
     pi.nome, 
     pi.numero_pokemon, 
-    STRING_AGG(DISTINCT t.tipo, ', ') AS tipos,
-    pe.nivel
+    STRING_AGG(DISTINCT t.tipo, ', ') AS tipos
+
   FROM 
     pokemon_info pi
     INNER JOIN pokemon_tipagem pt ON pt.pokemon_info_id = pi.pokemon_info_id
@@ -1805,7 +1808,9 @@ const MostrarGradeEvolutivaPokemon = async (req, res) => {
     INNER JOIN familia ON pi.pokemon_info_id = familia.pokemon_id
     LEFT JOIN pokemon_evolucoes pe ON pe.evolucao_pokemon_info_id = pi.pokemon_info_id
   GROUP BY 
-    pi.imagem, pi.nome, pi.numero_pokemon, pe.nivel
+    pi.imagem, pi.nome, pi.numero_pokemon
+  ORDER BY
+    pi.estagio_evolucao
   `;
 
     // Executar a segunda consulta na transação
