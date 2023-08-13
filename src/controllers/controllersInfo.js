@@ -1391,7 +1391,6 @@ const EditarTipagem = async (req, res) => {
 
 const EditarPokemon = async (req, res) => {
   try {
-    const { pokemon_id } = req.params.id;
 
     const {
       novoNome,
@@ -1408,7 +1407,7 @@ const EditarPokemon = async (req, res) => {
       novaImagem,
       novoNumeroPokemon,
       novoGenero,
-
+      pokemon_id,
       novaFraqueza,
       novaHabilidade,
       novaTipagem,
