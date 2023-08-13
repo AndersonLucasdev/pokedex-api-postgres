@@ -1415,6 +1415,31 @@ const EditarPokemon = async (req, res) => {
       novaEstagioEvolucao,
     } = req.body;
 
+    if (
+      !novoNome &&
+      !novaDescricao &&
+      !novaImagem &&
+      !novaCategoria &&
+      !novaAltura &&
+      !novoPeso &&
+      !novoNumeroPokemon &&
+      !novoHP &&
+      !novoAtaque &&
+      !novaDefesa &&
+      !novoAtaqueEspecial &&
+      !novaDefesaEspecial &&
+      !novaVelocidade &&
+      !novoGenero &&
+      !novaFraqueza &&
+      !novaHabilidade &&
+      !novaTipagem &&
+      !novaEstagioEvolucao
+    ) {
+      return res
+        .status(200)
+        .json({ Mensagem: "Modifique pelo menos um campo.", status: 400 });
+    }
+
     // Formatar os campos
     const nomeFormatado = primeiraLetraMaiuscula(novoNome);
     const descricaoFormatada = primeiraLetraMaiuscula(novaDescricao);
@@ -1430,31 +1455,6 @@ const EditarPokemon = async (req, res) => {
     const especialDefesaFormatada = String(novaDefesaEspecial).trim();
     const velocidadeFormatada = String(novaVelocidade).trim();
     const generoFormatado = primeiraLetraMaiuscula(novoGenero);
-
-    if (
-      !nomeFormatado &&
-      !descricaoFormatada &&
-      !imagemFormatada &&
-      !categoriaFormatada &&
-      !alturaFormatada &&
-      !pesoFormatado &&
-      !numeroPokemonFormatado &&
-      !hpFormatado &&
-      !ataqueFormatado &&
-      !defesaFormatada &&
-      !especialAtaqueFormatado &&
-      !especialDefesaFormatada &&
-      !velocidadeFormatada &&
-      !generoFormatado &&
-      !novaFraqueza &&
-      !novaHabilidade &&
-      !novaTipagem &&
-      !novaEstagioEvolucao
-    ) {
-      return res
-        .status(200)
-        .json({ Mensagem: "Modifique pelo menos um campo.", status: 400 });
-    }
 
     let novoTotal =
       (ataqueFormatado +
@@ -1564,17 +1564,10 @@ const EditarPokemon = async (req, res) => {
       );
     }
 
-    if (especialAtaqueFormatado) {
+    if (especialDefesaFormatada) {
       await pool.query(
         "UPDATE pokemon_info SET especial_defesa = $1 WHERE pokemon_info_id = $2",
-        [especialAtaqueFormatado, pokemon_id]
-      );
-    }
-
-    if (velocidadeFormatada) {
-      await pool.query(
-        "UPDATE pokemon_info SET velocidade = $1 WHERE pokemon_info_id = $2",
-        [velocidadeFormatada, pokemon_id]
+        [especialDefesaFormatada, pokemon_id]
       );
     }
 
@@ -1611,91 +1604,84 @@ const EditarPokemon = async (req, res) => {
         [pokemon_id]
       );
 
-      const list_fraqueza_id = [];
       for (const fraqueza_nome of fraqueza) {
+        const FraquezaFormatada = primeiraLetraMaiuscula(fraqueza_nome);
         const verificaFraqueza = await pool.query(
           "SELECT fraquezas_id FROM fraquezas WHERE fraqueza = $1",
-          [fraqueza_nome]
+          [FraquezaFormatada]
         );
-        if (verificaFraqueza.rows.length === 0) {
+        if (verificaFraqueza.rows.length > 0) {
+          const fraquezas_id = verificaFraqueza.rows[0].fraquezas_id;
+          await pool.query(
+            `INSERT INTO pokemon_fraquezas (pokemon_info_id, fraquezas_id) VALUES ($1, $2)`,
+            [pokemon_id, fraquezas_id]
+          );
+        } else {
           return res.status(400).json({
             Mensagem: `Fraqueza inválida: ${fraqueza_nome}.`,
             status: 400,
           });
         }
-        const fraquezas_id = verificaFraqueza.rows[0].fraquezas_id;
-        list_fraqueza_id.push(fraquezas_id);
-      }
-
-      for (const fraqueza_id of list_fraqueza_id) {
-        await pool.query(
-          "INSERT INTO pokemon_fraquezas (pokemon_info_id, fraquezas_id) VALUES ($1, $2)",
-          [pokemon_id, fraqueza_id]
-        );
       }
     }
 
     if (novaHabilidade) {
-      // deletando relacionamentos
+      // Remover todos os relacionamentos de habilidades existentes do Pokémon
       await pool.query(
         `DELETE FROM public.pokemon_habilidades
-      WHERE pokemon_info_id = %1`,
+    WHERE pokemon_info_id = $1`,
         [pokemon_id]
       );
 
-      const list_habilidades_id = [];
       for (const habilidade_nome of novaHabilidade) {
+        const HabilidadeFormatada = primeiraLetraMaiuscula(habilidade_nome);
         const verificaHabilidade = await pool.query(
-          "SELECT habilidade_id FROM habilidades WHERE habilidade = $1",
-          [habilidade_nome]
+          "SELECT id_habilidade FROM habilidades WHERE habilidade = $1",
+          [HabilidadeFormatada]
         );
-        if (verificaHabilidade.rows.length === 0) {
+
+        if (verificaHabilidade.rows.length > 0) {
+          const habilidade_id = verificaHabilidade.rows[0].id_habilidade;
+          await pool.query(
+            `INSERT INTO pokemon_habilidades (pokemon_info_id, habilidade_id) VALUES ($1, $2)`,
+            [pokemon_id, habilidade_id]
+          );
+        } else {
           return res.status(400).json({
             Mensagem: `Habilidade inválida: ${habilidade_nome}.`,
             status: 400,
           });
         }
-        const habilidades_id = verificaHabilidade.rows[0].habilidade_id;
-        list_habilidades_id.push(habilidades_id);
-      }
-
-      for (const habilidade_id of list_habilidades_id) {
-        await pool.query(
-          "INSERT INTO pokemon_habilidades (pokemon_info_id, habilidade_id) VALUES ($1, $2)",
-          [pokemon_id, habilidade_id]
-        );
       }
     }
 
     if (novaTipagem) {
-      // deletando relacionamentos
+      // Remover todos os relacionamentos de tipagens existentes do Pokémon
       await pool.query(
         `DELETE FROM public.pokemon_tipagem
-      WHERE pokemon_info_id = %1`,
+    WHERE pokemon_info_id = $1`,
         [pokemon_id]
       );
 
-      const list_tipagem_id = [];
       for (const tipagem_nome of novaTipagem) {
+        const TipagemFormatada = primeiraLetraMaiuscula(tipagem_nome);
         const verificaTipagem = await pool.query(
-          "SELECT tipagem_id FROM tipagem WHERE tipo = $1",
-          [tipagem_nome]
+          "SELECT id_tipagem FROM tipagem WHERE tipo = $1",
+          [TipagemFormatada]
         );
-        if (verificaTipagem.rows.length === 0) {
+
+        if (verificaTipagem.rows.length > 0) {
+          const tipagem_id = verificaTipagem.rows[0].id_tipagem;
+          await pool.query(
+            `INSERT INTO pokemon_tipagem (pokemon_info_id, tipagem_id) VALUES ($1, $2)`,
+            [pokemon_id, tipagem_id]
+          );
+        } else {
           return res.status(400).json({
-            Mensagem: `Tipo inválida: ${tipagem_nome}.`,
+            Mensagem: `Tipagem inválida: ${tipagem_nome}.`,
             status: 400,
           });
         }
-        const tipos_id = verificaTipagem.rows[0].tipagem_id;
-        list_tipagem_id.push(tipos_id);
-      }
-
-      for (const tipo_id of list_tipagem_id) {
-        await pool.query(
-          "INSERT INTO pokemon_tipagem (pokemon_info_id, tipagem_id) VALUES ($1, $2)",
-          [pokemon_id, tipo_id]
-        );
       }
     }
 
@@ -1704,8 +1690,6 @@ const EditarPokemon = async (req, res) => {
     res.status(500).json({ Mensagem: "Erro ao editar pokemon.", erro });
   }
 };
-
-
 
 // grade evolutiva
 const MostrarGradeEvolutivaPokemon = async (req, res) => {
@@ -1827,11 +1811,13 @@ const MostrarGradeEvolutivaPokemon = async (req, res) => {
 };
 
 const CadastrarGradeEvolutivaPokemon = async (req, res) => {
-  const { numeroPokemon, numeroPokemonEvolucao} = req.body;
+  const { numeroPokemon, numeroPokemonEvolucao } = req.body;
   // Formatar os campos
   try {
     if (!numeroPokemon || !numeroPokemonEvolucao) {
-      return res.status(400).json({ Mensagem: 'Há campo(s) vazio(s).', status: 400 });
+      return res
+        .status(400)
+        .json({ Mensagem: "Há campo(s) vazio(s).", status: 400 });
     }
     const numeroPokemonFormatado = String(numeroPokemon).trim();
     const numeroPokemonEvolucaoFormatado = String(numeroPokemonEvolucao).trim();
@@ -1850,9 +1836,12 @@ const CadastrarGradeEvolutivaPokemon = async (req, res) => {
     );
     pokemon_id_evolucao = verificaNumeroPokemonEvolucao.rows[0].pokemon_info_id;
 
-    verificaGradeJaCadastrada = await pool.query(`
+    verificaGradeJaCadastrada = await pool.query(
+      `
     select * from pokemon_evolucoes where pokemon_info_id = $1 and evolucao_pokemon_info_id = $2
-    `, [pokemon_id, pokemon_id_evolucao])
+    `,
+      [pokemon_id, pokemon_id_evolucao]
+    );
 
     if (verificaGradeJaCadastrada.rows.length > 0) {
       return res
@@ -1865,17 +1854,15 @@ const CadastrarGradeEvolutivaPokemon = async (req, res) => {
         pokemon_info_id,
         evolucao_pokemon_info_id
       ) VALUES ($1, $2) RETURNING pokemon_info_id`,
-      [
-        pokemon_id,
-        evolucao_pokemon_info_id
-      ]
+      [pokemon_id, evolucao_pokemon_info_id]
     );
     const pokemon_info_id = cadastroPokemon.rows[0].pokemon_info_id;
 
-
-    return res.status(200).json({ Mensagem: 'Grade cadastrada com sucesso!' });
+    return res.status(200).json({ Mensagem: "Grade cadastrada com sucesso!" });
   } catch (erro) {
-    return res.status(500).json({ Mensagem: 'Erro ao cadastrar grade pokemon.', erro });
+    return res
+      .status(500)
+      .json({ Mensagem: "Erro ao cadastrar grade pokemon.", erro });
   }
 };
 
