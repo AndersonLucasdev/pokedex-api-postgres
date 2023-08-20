@@ -1866,8 +1866,25 @@ const CadastrarGradeEvolutivaPokemon = async (req, res) => {
 };
 
 const ExcluirGradeEvolutivaPokemon = async (req, res) => {
+  const {numeropokemon, numeroPokemonEvolucao} = req.body
   try {
-    await pool.query(`Delete from pokemon_evolucoes`);
+    let pokemon_id;
+    const verificaNumeroPokemon = await pool.query(
+      `SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1`,
+      [numeropokemon]
+    );
+    pokemon_id = verificaNumeroPokemon.rows[0].pokemon_info_id;
+    // Verificar evolucao pokemon
+    let pokemon_id_evolucao;
+    const verificaNumeroPokemonEvolucao = await pool.query(
+      `SELECT pokemon_info_id FROM pokemon_info WHERE numero_pokemon = $1`,
+      [numeroPokemonEvolucao]
+    );
+    pokemon_id_evolucao = verificaNumeroPokemonEvolucao.rows[0].pokemon_info_id;
+
+    await pool.query(`Delete from pokemon_evolucoes where pokemon_info_id = $1 and evolucao_pokemon_info_id = $2`, [
+      pokemon_id, pokemon_id_evolucao
+    ]);
     return res.status(200).json({ Mensagem: "Grade excluida com sucesso." });
   } catch {
     return res
